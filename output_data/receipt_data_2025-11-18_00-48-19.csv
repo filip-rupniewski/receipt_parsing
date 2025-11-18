@@ -1,0 +1,21 @@
+PID;status;date;order number;product name;size/volume;price;price per 1;shop;discount
+1;!;16.08.2025;1;Denner Drangensaft 1.51 Pel;NaN;1.95;NaN;denner;
+2;!;16.08.2025;2;Denner Kaisergemuse  N |;0,750;NaN;NaN;denner;
+3;!;16.08.2025;3;D-Vollmilch Past IL -;NaN;NaN;NaN;denner;
+4;!;16.08.2025;4;D-Müesli Traube-Nuss Ikg;NaN;2.55;NaN;denner;
+5;;16.08.2025;5;D-Tomme suisse Rund;0,100;1.95;19.50;denner;
+6;;16.08.2025;6;Butte mit IPS Weizenmehl;0,053;0.40;7.55;denner;50%
+7;;16.08.2025;7;Croissant;0,070;0.40;5.71;denner;53%
+8;!;16.08.2025;8;D-Joghurt Wanille;0,200;NaN;NaN;denner;
+9;!;16.08.2025;9;D-Joghurt Heidelbeer;0,200;NaN;NaN;denner;
+10;;16.08.2025;10;Denner: Gouda in Scheibe;0,250;2.30;9.20;denner;
+11;;16.08.2025;11;D-Nusskernmischung unge;0,200;3.00;15.00;denner;
+12;!;16.08.2025;12;D-Schokolade Nuss;0,100;NaN;NaN;denner;
+13;;22.08.2025;1;Denner Kaisergemüse;0,750;3.45;4.60;denner;
+14;;22.08.2025;2;Denner Norweg Portionen;0,250;5.90;23.60;denner;
+15;!;22.08.2025;3;D-Vollmilch Past IL;NaN;1.40;NaN;denner;
+16;;22.08.2025;4;Denner Gouda in Scheibe;0,250;2.30;9.20;denner;
+17;!;22.08.2025;5;D-Joghurt Vanilie;0,290;NaN;NaN;denner;
+18;!;04.09.2025;1;Gurken 1Stk,;NaN;1.40;NaN;denner;
+19;!;04.09.2025;2;Forellenfilets geräuehert;NaN;2.95;NaN;denner;
+20;!;04.09.2025;3;Schweins-Voressen  300g;0,500;NaN;NaN;denner;
