@@ -30,3 +30,18 @@ env/
 # OS-generated files
 .DS_Store
 Thumbs.db
+
+#all photos
+wszystkie_zdjęcia/
+
+#archives
+archives/
+
+#ocr_cache
+ocr_cache/
+
+#output_data
+output_data/
+
+#preprocessed_images
+preprocessed_images/
