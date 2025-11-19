@@ -33,12 +33,16 @@ Thumbs.db
 
 #all photos
 wszystkie_zdjęcia/
+migros/
+denner/
+lidl/
 
 #archives
 archives/
 
 #ocr_cache
 ocr_cache/
+ocr_cache_old/
 
 #output_data
 output_data/
