@@ -4,120 +4,128 @@ nr;product name;correct product name;correct size
 3;Bezeictwang Betrag;;
 4;Butte mit IP-Suisse Mehl;;
 5;Butte mit IP-Suisse Mehl 539;Butte mit IP-Suisse Mehl;0,053
-6;Butte mit IPS Weizenmehl;;
+6;Butte mit IPS Weizenmehl;Butte mit IP-Suisse Mehl;0,053
 7;Croissant;;
-8;D- Joghurt Heidelbeer;D-Joghurt Heidelbeer;
-9;D- Passata di poaod Tet 5009;D-Passata di pomod let;0,5
-10;D- Passata di pomod Tet;D-Passata di pomod let;
-11;D- Passata di pomod fet;D-Passata di pomod let;
-12;D-Eier Import Boden.;;
-13;D-Eier Import Boden. 15x+;D-Eier Import Boden.;15,0
-14;D-Joghurt Heidelbeer;;
-15;D-Joghurt Heidelbeer 2009;D-Joghurt Heidelbeer;0,2
-16;D-Joghurt Kirsche;;
-17;D-Joghurt Vanilie;;
-18;D-Joghurt Wanille;D-Joghurt Vanilie;
-19;D-Jognurt Heideibeer;D-Joghurt Heidelbeer;
-20;D-Miesli Traube-Nuss Ikg;D-Müesli Traube-Nuss;1,0
-21;D-Miesli Traube-Nuss ikg;D-Müesli Traube-Nuss;1,0
-22;D-Mües1i Traube-Nuss Ikg;D-Müesli Traube-Nuss;1,0
-23;D-Müesli Traube-Nuss;;
-24;D-Müesli Traube-Nuss Ikg;D-Müesli Traube-Nuss;1,0
-25;D-Nusskernmischung unge;;
-26;D-Nusskernmischung unge 2009;D-Nusskernmischung unge;0,2
-27;D-Nusskernsischung unge 2009;D-Nusskernmischung unge;0,2
-28;D-Passata di pomod let;;
-29;D-Rinds-Hackf leisch;D-Rinds-Hackfleisch;
-30;D-Rinds-Hackfleisch;;
-31;D-Rinds-Heckt leisch Sug;D-Rinds-Hackfleisch;0,5
-32;D-Schokolade Muss;D-Schokolade Muss;0,1
-33;D-Schokolade Nuss;D-Schokolade Muss;0,1
-34;D-Schokolade Nuss 1009;D-Schokolade Muss;0,1
-35;D-Schokolede fuss;D-Schokolade Muss;0,1
-36;D-Tomme suisse Rund;;
-37;D-Vollailch Past IL;D-Vollmilch Past;1,0
-38;D-Vollatich Pest 1;D-Vollmilch Past;1,0
-39;D-Vollmilch Past;;
-40;D-Vollmilch Past IL;D-Vollmilch Past;1,0
-41;D-Vollmilch Past IL -;D-Vollmilch Past;1,0
-42;Danner Raped a;Danner Rapsöl;1,0
-43;Danner Rapsöl;;
-44;Demer Hörnli ikg;Denner Hörnli;1,0
-45;Denne: Kaisergemise;Denner Kaisergemüse;
-46;Denner Bananen Of fen of fenkg;Denner Bananen Ofenverka;
-47;Denner Bananen Of fen of ferkg;Denner Bananen Ofenverka;
-48;Denner Bananen Ofenverka;;
-49;Denner Bananen Ofenverka kg;Denner Bananen Ofenverka;
-50;Denner Bananen Offen of fenkg;Denner Bananen Ofenverka;
-51;Denner Bananen Offen offenkg;Denner Bananen Ofenverka;
-52;Denner Bananen Offen offerikg;Denner Bananen Ofenverka;
-53;Denner Drangensaft 1.51 Pel;Denner Orangensaft;1,5
-54;Denner Edamer Scheiben;;
-55;Denner Gouda In scheibe 2509 2. 30.;Denner Gouda in Scheibe;0,25
-56;Denner Gouda in Scheibe;Denner Gouda in Scheibe;0,25
-57;Denner Gouda in Scheibe 2509;Denner Gouda in Scheibe;0,25
-58;Denner Hackfle gemischt;;
-59;Denner Hornli Ikg;Denner Hörnli;1,0
-60;Denner Hörnli;;
-61;Denner Kaisergemise;Denner Kaisergemüse;
-62;Denner Kaisergemuse  N |;Denner Kaisergemüse;
-63;Denner Kaisergemüse;Denner Kaisergemüse;
-64;Denner Kaisergesüse;Denner Kaisergemüse;
-65;Denner Norweg Port ionen  5. 4;Denner Norweg Portionen;0,25
-66;Denner Norweg Portianen;Denner Norweg Portionen;0,25
-67;Denner Norweg Portionen;Denner Norweg Portionen;0,25
-68;Denner Norweg Portionen  5 95;Denner Norweg Portionen;0,25
-69;Denner Norweg Portionen 2509;Denner Norweg Portionen;0,25
-70;Denner Orangensaft;Denner Orangensaft;1,5
-71;Denner Orangensaft  Pet;Denner Orangensaft;1,5
-72;Denner Orangensaft 1.51 Pet;Denner Orangensaft;1,5
-73;Denner Oregano;;
-74;Denner Oregano 129;Denner Oregano;0,012
-75;Denner Reis perboiled;;
-76;Denner Reis perboiled Ing;Denner Reis perboiled;1,0
-77;Denner Tomatenpüree;;
-78;Denner Tomatenpüree 2009;Denner Tomatenpüree;0,2
-79;Denner: Gouda in Scheibe;Denner Gouda in Scheibe;0,25
-80;Derner Bananen Offen offenkg |;Denner Bananen Ofenverka;
-81;Derner Gouda in Scheibe 2509;Denner Gouda in Scheibe;0,25
-82;Ecoma Toilettenpapi;;
-83;Ecowa Toilettenpapi 20x20081;Ecoma Toilettenpapi;20,0
-84;Flachofirsiche;Flachpfirsiche;
-85;Flachpfirsiche;Flachpfirsiche;
-86;Forellenfilets geräuehert;Forellenfilets geräuchert;
-87;Gebühr ensack Stedt Bern IRo);Gebührensack Stedt Bern 17l;10,0
-88;Gebührensack Stedt Bern 17l;;
-89;Gurken;;
-90;Gurken 1Stk,;Gurken;1,0
-91;Henry Lambertz Best Se;;
-92;IP-Suisse Krustenbrot;;
-93;IP-Suisse Lauge mit Salz;;
-94;IP-Suisse Zwiebein Offen kg;IP-Suisse Zwiebeln Offen kg;
-95;IP-Suisse Zwiebeln Offen kg;;
-96;IP-Suisse Zwiebeln Offenv kg;IP-Suisse Zwiebeln Offen kg;
-97;LaMole Sfornatini Rosma;;
-98;Lenor Goldene Orchide;;
-99;Mist. 2.68 3.20;-;
-100;Mulino Bianco Molinett;;
-101;O0-Rinds Hackfleisch  T. 60;D-Rinds-Hackfleisch;0,5
-102;Pain ait IP-Suisse Mehl  1.25;Pain mit IP-Suisse Mehl;0,075
-103;Pain mit IP-Suisse Mehl;;
-104;Pistazien;;
-105;Rispentomaten Offenverka kg;;
-106;Rispentosaten Offenverka kg;Rispentomaten Offenverka kg;
-107;Rundung Of  379999999999999_ -0.U3 +;-;
-108;Rustico Giofel mit IPS;;
-109;Schoggigipfeli;;
-110;Schweins-Voressen;;
-111;Schweins-Voressen  300g;Schweins-Voressen;0,3
-112;Skandin Rauchlachs, ASC;Skandin Rauchlachs, ASC;0,15
-113;Thai Kitch. Ge. Curry Pa.;;
-114;That Kitch. Ge. Curry Pa. ‚2250 4. 30;Thai Kitch. Ge. Curry Pa.;0,225
-115;Tomaten Netz;Tomaten Netz;1,0
-116;Tomaten Netz Ikg;Tomaten Netz;1,0
-117;Tomaten Netz ko;Tomaten Netz;1,0
-118;Wonderful Pistazien XX;Pistazien;1,0
-119;b-Rinds-Hackfleisch 50ug;D-Rinds-Hackfleisch;0,5
-120;i aMule Sfarnatini Rosaa;LaMole Sfornatini Rosma;0,12
-121;iwenry Lasbertz Best Se;Henry Lambertz Best Se;1,0
-122;tenor Goldene Orchide 1.2391;Lenor Goldene Orchide;1,239
+8;D- Joghurt Heidelbeer;D-Joghurt Heidelbeer;0,2
+9;D- Joghurt Heidelbeer 200g;D-Joghurt Heidelbeer;0,2
+10;D- Passata di poaod Tet 5009;D-Passata di pomod let;0,5
+11;D- Passata di pomod Tet;D-Passata di pomod let;0,5
+12;D- Passata di pomod fet;D-Passata di pomod let;0,5
+13;D- Passata di pomod fet 500g;D-Passata di pomod let;0,5
+14;D-Eier Import Boden.;D-Eier Import Boden.;15,0
+15;D-Eier Import Boden. 15x+;D-Eier Import Boden.;15,0
+16;D-Joghurt Heidelbeer;D-Joghurt Heidelbeer;0,2
+17;D-Joghurt Heidelbeer 2009;D-Joghurt Heidelbeer;0,2
+18;D-Joghurt Heidelbeer 200g;D-Joghurt Heidelbeer;0,2
+19;D-Joghurt Kirsche;D-Joghurt Kirsche;0,2
+20;D-Joghurt Vanilie;D-Joghurt Vanilie;0,2
+21;D-Joghurt Vanilie 290g;D-Joghurt Vanilie;0,2
+22;D-Joghurt Wanille;D-Joghurt Vanilie;0,2
+23;D-Jognurt Heideibeer;D-Joghurt Heidelbeer;0,2
+24;D-Jognurt Heideibeer 200g;D-Joghurt Heidelbeer;0,2
+25;D-Miesli Traube-Nuss Ikg;D-Müesli Traube-Nuss;1,0
+26;D-Miesli Traube-Nuss ikg;D-Müesli Traube-Nuss;1,0
+27;D-Mües1i Traube-Nuss Ikg;D-Müesli Traube-Nuss;1,0
+28;D-Müesli Traube-Nuss;D-Müesli Traube-Nuss;1,0
+29;D-Müesli Traube-Nuss Ikg;D-Müesli Traube-Nuss;1,0
+30;D-Nusskernmischung unge;D-Nusskernmischung unge;0,2
+31;D-Nusskernmischung unge 2009;D-Nusskernmischung unge;0,2
+32;D-Nusskernsischung unge 2009;D-Nusskernmischung unge;0,2
+33;D-Passata di pomod let;D-Passata di pomod let;0,5
+34;D-Rinds-Hackf leisch;D-Rinds-Hackfleisch;0,5
+35;D-Rinds-Hackf leisch 500g;D-Rinds-Hackfleisch;0,5
+36;D-Rinds-Hackfleisch;D-Rinds-Hackfleisch;0,5
+37;D-Rinds-Heckt leisch Sug;D-Rinds-Hackfleisch;0,5
+38;D-Schokolade Muss;D-Schokolade Nuss;0,1
+39;D-Schokolade Nuss;D-Schokolade Nuss;0,1
+40;D-Schokolade Nuss 1009;D-Schokolade Nuss;0,1
+41;D-Schokolede fuss;D-Schokolade Nuss;0,1
+42;D-Tomme suisse Rund;D-Tomme suisse Rund;0,1
+43;D-Vollailch Past IL;D-Vollmilch Past;1,0
+44;D-Vollatich Pest 1;D-Vollmilch Past;1,0
+45;D-Vollmilch Past;D-Vollmilch Past;1,0
+46;D-Vollmilch Past IL;D-Vollmilch Past;1,0
+47;D-Vollmilch Past IL -;D-Vollmilch Past;1,0
+48;Danner Raped a;Danner Rapsöl;1,0
+49;Danner Rapsöl;Danner Rapsöl;1,0
+50;Demer Hörnli ikg;Denner Hörnli;1,0
+51;Denne: Kaisergemise;Denner Kaisergemüse;
+52;Denner Bananen Of fen of fenkg;Denner Bananen Ofenverka;
+53;Denner Bananen Of fen of ferkg;Denner Bananen Ofenverka;
+54;Denner Bananen Ofenverka;Denner Bananen Ofenverka;
+55;Denner Bananen Ofenverka kg;Denner Bananen Ofenverka;
+56;Denner Bananen Offen of fenkg;Denner Bananen Ofenverka;
+57;Denner Bananen Offen offenkg;Denner Bananen Ofenverka;
+58;Denner Bananen Offen offerikg;Denner Bananen Ofenverka;
+59;Denner Drangensaft 1.51 Pel;Denner Orangensaft;1,5
+60;Denner Edamer Scheiben;Denner Edamer Scheiben;0,25
+61;Denner Gouda In scheibe 2509 2. 30.;Denner Gouda in Scheibe;0,25
+62;Denner Gouda in Scheibe;Denner Gouda in Scheibe;0,25
+63;Denner Gouda in Scheibe 2509;Denner Gouda in Scheibe;0,25
+64;Denner Hackfle gemischt;Denner Hackfle gemischt;0,5
+65;Denner Hornli Ikg;Denner Hörnli;1,0
+66;Denner Hörnli;Denner Hörnli;1,0
+67;Denner Kaisergemise;Denner Kaisergemüse;0,75
+68;Denner Kaisergemuse  N |;Denner Kaisergemüse;0,75
+69;Denner Kaisergemüse;Denner Kaisergemüse;0,75
+70;Denner Kaisergesüse;Denner Kaisergemüse;0,75
+71;Denner Norweg Port ionen  5. 4;Denner Norweg Portionen;0,25
+72;Denner Norweg Portianen;Denner Norweg Portionen;0,25
+73;Denner Norweg Portionen;Denner Norweg Portionen;0,25
+74;Denner Norweg Portionen  5 95;Denner Norweg Portionen;0,25
+75;Denner Norweg Portionen 2509;Denner Norweg Portionen;0,25
+76;Denner Orangensaft;Denner Orangensaft;1,5
+77;Denner Orangensaft  Pet;Denner Orangensaft;1,5
+78;Denner Orangensaft 1.51 Pet;Denner Orangensaft;1,5
+79;Denner Oregano;Denner Oregano;0,012
+80;Denner Oregano 129;Denner Oregano;0,012
+81;Denner Reis perboiled;Denner Reis perboiled;1,0
+82;Denner Reis perboiled Ing;Denner Reis perboiled;1,0
+83;Denner Tomatenpüree;Denner Tomatenpüree;0,2
+84;Denner Tomatenpüree 2009;Denner Tomatenpüree;0,2
+85;Denner: Gouda in Scheibe;Denner Gouda in Scheibe;0,25
+86;Derner Bananen Offen offenkg |;Denner Bananen Ofenverka;
+87;Derner Gouda in Scheibe 2509;Denner Gouda in Scheibe;0,25
+88;Ecoma Toilettenpapi;Ecoma Toilettenpapi;20,0
+89;Ecowa Toilettenpapi 20x20081;Ecoma Toilettenpapi;20,0
+90;Flachofirsiche;Flachpfirsiche;
+91;Flachpfirsiche;Flachpfirsiche;
+92;Forellenfilets geräuehert;Forellenfilets geräuchert;
+93;Gebühr ensack Stedt Bern IRo);Gebührensack Stedt Bern 17l;10,0
+94;Gebührensack Stedt Bern 17l;Gebührensack Stedt Bern 17l;10,0
+95;Gurken;Gurken;1,0
+96;Gurken 1Stk,;Gurken;1,0
+97;Henry Lambertz Best Se;Henry Lambertz Best Se;1,0
+98;IP-Suisse Krustenbrot;IP-Suisse Krustenbrot;
+99;IP-Suisse Lauge mit Sal;;
+100;IP-Suisse Lauge mit Salz;IP-Suisse Lauge mit Sal;
+101;IP-Suisse Zwiebein Offen kg;IP-Suisse Zwiebeln Offen kg;
+102;IP-Suisse Zwiebeln Offen kg;IP-Suisse Zwiebeln Offen kg;
+103;IP-Suisse Zwiebeln Offenv kg;IP-Suisse Zwiebeln Offen kg;
+104;LaMole Sfornatini Rosma;LaMole Sfornatini Rosma;
+105;Lenor Goldene Orchide;Lenor Goldene Orchide;
+106;Mist. 2.68 3.20;-;
+107;Mulino Bianco Molinett;Mulino Bianco Molinett;
+108;O0-Rinds Hackfleisch  T. 60;D-Rinds-Hackfleisch;0,5
+109;Pain ait IP-Suisse Mehl  1.25;Pain mit IP-Suisse Mehl;0,075
+110;Pain mit IP-Suisse Mehl;Pain mit IP-Suisse Mehl;
+111;Pistazien;Pistazien;
+112;Rispentomaten Offenverka kg;Rispentomaten Offenverka kg;
+113;Rispentosaten Offenverka kg;Rispentomaten Offenverka kg;
+114;Rundung Of  379999999999999_ -0.U3 +;-;
+115;Rustico Giofel mit IPS;Rustico Giofel mit IPS;
+116;Schoggigipfeli;Schoggigipfeli;
+117;Schweins-Voressen;Schweins-Voressen;0,3
+118;Schweins-Voressen  300g;Schweins-Voressen;0,3
+119;Schweins-Voressen 500g 300g;Schweins-Voressen;0,3
+120;Skandin Rauchlachs, ASC;Skandin Rauchlachs, ASC;0,15
+121;Thai Kitch. Ge. Curry Pa.;Thai Kitch. Ge. Curry Pa.;0,225
+122;That Kitch. Ge. Curry Pa. ‚2250 4. 30;Thai Kitch. Ge. Curry Pa.;0,225
+123;Tomaten Netz;Tomaten Netz;1,0
+124;Tomaten Netz Ikg;Tomaten Netz;1,0
+125;Tomaten Netz ko;Tomaten Netz;1,0
+126;Wonderful Pistazien XX;Pistazien;1,0
+127;b-Rinds-Hackfleisch 50ug;D-Rinds-Hackfleisch;0,5
+128;i aMule Sfarnatini Rosaa;LaMole Sfornatini Rosma;0,12
+129;iwenry Lasbertz Best Se;Henry Lambertz Best Se;1,0
+130;tenor Goldene Orchide 1.2391;Lenor Goldene Orchide;1,239
