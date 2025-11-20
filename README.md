@@ -1,19 +1,24 @@
 # Receipt OCR Processor
 
-A Python script to automatically extract itemized data from shopping receipt images using Optical Character Recognition (OCR). It processes images, parses the text for products, prices, and sizes, applies corrections, and outputs the structured data into a single CSV file.
+A Python script to automatically extract itemized data from shopping receipt images using Optical Character Recognition (OCR). It processes images from different shops (Denner, Lidl), parses the text for products and prices, applies a multi-layered correction system, and outputs the structured data into a single CSV file.
 
- <!-- This is a placeholder image. You could create a diagram showing the flow. -->
+Diagram showing the flow: 
+
+Image files -> Preprocessing -> OCR (with caching) -> Text Parsing -> Data Correction -> Final CSV Output
 
 ## Key Features
 
--   **Image Pre-processing:** Automatically enhances receipt images for better OCR accuracy (grayscale, inversion, Otsu's binarization).
--   **OCR Text Extraction:** Uses the Tesseract engine to extract text from images.
--   **Intelligent Parsing:** Uses regular expressions to identify individual items, prices, sizes, and discounts from raw text.
--   **Rule-Based Data Correction:** Fix common OCR errors by applying rules from a user-maintained CSV file.
--   **Heuristic Data Enrichment:** "Naively" fills in missing price or size data for an item by using information from historical purchases of the same item.
--   **Structured CSV Output:** Saves all extracted data into a clean, timestamped CSV file, sorted chronologically.
--   **Correction Template Generation:** Automatically creates a CSV template with all unique product names to make adding correction rules easy.
--   **Console Reporting:** Provides a data preview, a final summary of product counts, and performance metrics after execution.
+-   **Multi-Shop Support:** Includes dedicated parsing logic for different supermarket receipt formats (currently **Denner** and **Lidl**).
+-   **Image Pre-processing:** Automatically enhances receipt images for better OCR accuracy (grayscale, inversion for dark backgrounds, Otsu's binarization).
+-   **OCR with Caching:** Uses the Tesseract engine to extract text and saves the result in an `ocr_cache` directory. Subsequent runs on the same image are instantaneous, avoiding re-processing.
+-   **Intelligent Parsing:** Uses shop-specific regular expressions to identify individual items, prices, sizes, and discounts from raw text.
+-   **Advanced Data Correction:**
+    -   **Product Corrections (`product_name_corrections.csv`):** Fixes common OCR errors in product names and fills in missing sizes.
+    -   **Standard Sizes (`standard_sizes.csv`):** Defines default sizes for products, enabling the script to calculate total volume for multi-buy items (e.g., `3 x Milk`).
+    -   **Manual Overrides (`manual_dates.csv`, `manual_input.csv`):** Allows for manual entry of entire items or overriding incorrect dates for specific receipts.
+-   **Heuristic Data Enrichment:** "Naively" fills in missing price or size data for an item by looking up the price-per-unit from historical purchases of the same item.
+-   **Structured CSV Output:** Saves all extracted data into a clean, timestamped CSV file, sorted chronologically. An optional translated version can also be generated.
+-   **Correction Template Generation:** Automatically creates a CSV template (`product_name_correction_template.csv`) with all unique product names to make adding correction rules easy.
 -   **Debug Mode:** An optional `--debug` flag saves the pre-processed images and raw OCR text for troubleshooting.
 
 ## Technologies Used
@@ -32,14 +37,15 @@ You must have the Tesseract OCR engine installed on your system. It is a separat
 
 -   **Windows:** Download and run the installer from [Tesseract at UB Mannheim](https://github.com/UB-Mannheim/tesseract/wiki). Make sure to add the Tesseract installation directory to your system's `PATH` environment variable.
 -   **macOS:** Install via Homebrew: `brew install tesseract`
--   **Linux (Debian/Ubuntu):** Install via apt: `sudo apt update && sudo apt install tesseract-ocr tesseract-ocr-deu tesseract-ocr-eng`
+-   **Linux (Debian/Ubuntu):** The script uses German and English language packs. Install them with Tesseract:
+    `sudo apt update && sudo apt install tesseract-ocr tesseract-ocr-deu tesseract-ocr-eng`
 
 ### 2. Installation Steps
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/filip-rupniewski/receipt_parsing.git
-    cd receipt-parsing
+    git clone https://github.com/your-username/your-repo-name.git
+    cd your-repo-name
     ```
 
 2.  **Create and activate a virtual environment (recommended):**
@@ -54,74 +60,73 @@ You must have the Tesseract OCR engine installed on your system. It is a separat
     ```
 
 3.  **Install the required Python packages:**
+    *(Assuming you have a `requirements.txt` file)*
     ```bash
-    pip install -r requirements.txt
+    pip install opencv-python pytesseract numpy
     ```
 
 ## How to Use
 
 ### 1. Directory Structure
 
-Place your receipt images (e.g., `.jpg`, `.png`) in a directory. The script will create the other directories it needs.
+The script is designed to work with a specific directory structure. It will create these directories automatically if they don't exist.
 
 ```
-receipt_parsing_/
-├── receipts_pictures/        <-- Put your receipt images here
+your_project_folder/
+├── your_receipts/          <-- Put your receipt images here
 │   ├── receipt1.jpg
 │   └── receipt2.png
-├── correction_files/     <-- Correction CSV files go here
-├── output_data/          <-- The final CSV output will be saved here
-├── preprocessed_images/  <-- images after prepreocessing are saved here
-└── process_receipts.py   <-- The main script
+├── correction_files/       <-- All manual data and correction CSV files
+│   ├── product_name_corrections.csv
+│   ├── standard_sizes.csv
+│   ├── manual_dates.csv
+│   ├── manual_input.csv
+│   └── polish_translations.csv
+├── ocr_cache/              <-- Cached raw text from OCR is stored here
+├── output_data/            <-- The final CSV outputs will be saved here
+├── preprocessed_images/    <-- Saved here if you use --debug mode
+└── process_receipts.py     <-- The main script
 ```
 
 ### 2. Running the Script
 
-Execute the script from your terminal, pointing it to your image file or directory.
+Execute the script from your terminal. You must specify the input path (a single image or a directory) and the shop it's from.
 
-**To process a single image:**
+**To process a single image from Denner:**
 ```bash
-python process_receipts.py path/to/your_receipts/receipt1.jpg
+python process_receipts.py path/to/your_receipts/receipt1.jpg --shop denner
 ```
 
-**To process an entire directory of images:**
+**To process an entire directory of Lidl receipts:**
 ```bash
-python process_receipts.py path/to/your_receipts/
+python process_receipts.py path/to/your_receipts/ --shop lidl
 ```
 
 **To run in debug mode:**
 ```bash
-python process_receipts.py path/to/your_receipts/ --debug
+python process_receipts.py path/to/your_receipts/ --shop denner --debug
 ```
 
-### 3. The Correction Workflow
+### 3. The Correction & Data Workflow
 
-The script's power comes from its ability to learn from corrections.
+The script's power comes from its ability to learn from corrections via several CSV files in the `correction_files/` directory.
 
-1.  **First Run:** Run the script on your images for the first time. It may have errors in product names or sizes.
-2.  **Generate Template:** The script will create a file at `correction_files/product_name_correction_template.csv`. This file contains all the unique product names it found.
-3.  **Add Your Corrections:** Open the `...template.csv` file.
-    - In the `correct product name` column, type the correct name for any product that was misidentified by OCR.
-    - In the `correct size` column, enter the correct standardized size (in `kg` or `l`) if it was missed or incorrect.
-
-    **Example `product_name_correction_template.csv`:**
-    ```csv
-    nr;product name;correct product name;correct size
-    1;APFEL GOLDEN;Apfel Golden Delicious;1
-    2;MlLCH DRINK;Milch Drink;0,5
-    3;Tomaten;Tomaten;
-    ```
-4.  **Activate Corrections:** Rename the template file from `product_name_correction_template.csv` to `product_name_corrections.csv` within the `correction_files` directory.
-5.  **Re-run the Script:** Run the script again. This time, it will load your rules and automatically apply the corrections, resulting in much cleaner data.
+1.  **First Run:** Run the script on your images. It may have errors in product names or fail to find dates.
+2.  **Generate Template:** The script will create `correction_files/product_name_correction_template.csv`. This file contains every unique product name it found.
+3.  **Add Your Corrections:**
+    - **`product_name_corrections.csv`**: Rename the template to this. Open it and fill in the `correct product name` and `correct size` columns for any misidentified items. A `-` in the `correct product name` column will cause the item to be deleted from the output.
+    - **`standard_sizes.csv`**: To help parse multi-buy items (e.g., `3 x 2.50`), add the product's correct name and its standard size (in kg or L) here.
+    - **`manual_dates.csv`**: If the script can't find a date for an image, add an entry here mapping the filename to the correct date (e.g., `receipt1.jpg;24.12.2023`).
+    - **`manual_input.csv`**: If an item was missed entirely, you can add it manually to this file, and it will be merged into the final output.
+4.  **Re-run the Script:** Run the script again. It will now load all your rules and overrides, resulting in much cleaner and more complete data.
 
 ## Output
 
 -   **Primary CSV File:** A file named `receipt_data_YYYY-MM-DD_HH-MM-SS.csv` will be created in the `output_data` directory. It contains all the processed items, sorted by date.
+-   **Translated CSV File (Optional):** If you provide a `polish_translations.csv` file, a second output `polish_receipt_data_... .csv` will be created with product names translated.
 -   **Console Output:** You will see a progress log, a preview of the first 20 processed items, a final summary of product counts, and performance metrics.
 
 ## Future Improvements (TODO)
 
--   [ ] Add a mechanism for purely manual entries (e.g., from a separate CSV file).
--   [ ] Implement a more advanced correction system for one-off manual fixes.
--   [ ] Create a historical price library to better flag price anomalies or estimate missing prices.
--   [ ] Support for additional supermarket receipt formats.
+-   [x] Add a mechanism for purely manual entries (`manual_input.csv`).
+-   [ ] Expand support for additional supermarket receipt formats (e.g., Coop, Migros).
