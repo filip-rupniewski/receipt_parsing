@@ -30,7 +30,7 @@ PID;product_name;default_size;shop
 32;Gebührensack Stedt Bern 17l;10;denner
 33;Gurken;1;denner
 34;Henry Lambertz Best Se;1;denner
-35;IP-Suisse Krustenbrot;0,5;denner
+35;IP-Suisse Krustenbrot;0,4;denner
 36;IP-Suisse Lauge mit Salz;1;denner
 37;IP-Suisse Zwiebeln Offen kg;1;denner
 38;LaMole Sfornatini Rosma;1;denner
@@ -61,11 +61,12 @@ PID;product_name;default_size;shop
 63;Pfirsiche;0,5;lidl
 64;Rinderhackfleisch;0,5;lidl
 65;Ruchbrot;0,5;lidl
-66;Schweineragout;0,5;lidl
-67;Schweinsnierstück-Steak;0,4;lidl
-68;Skandin Rauchlachs, ASC;0,15;lidl
-69;Steinofenpizza Schinken;2;lidl
-70;TN Gemischter Blattsalat;0,25;lidl
-71;TN Mischsalat;0,5;lidl
-72;Vanillejoghurt;0,2;lidl
-73;Vollmilch 3,5%;1,0;lidl
+66;Nierstuck Schwein;0,5;lidl
+67;Schweineragout;0,5;lidl
+68;Schweinsnierstück-Steak;0,4;lidl
+69;Skandin Rauchlachs, ASC;0,15;lidl
+70;Steinofenpizza Schinken;2;lidl
+71;TN Gemischter Blattsalat;0,25;lidl
+72;TN Mischsalat;0,5;lidl
+73;Vanillejoghurt;0,2;lidl
+74;Vollmilch 3,5%;1,0;lidl

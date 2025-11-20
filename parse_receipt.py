@@ -791,3 +791,16 @@ if __name__ == "__main__":
         print(f"\nPlaceholder: `apply_manual_changes` would run now with file '{filepath.name}'.")
 
     main()
+
+#TODO:
+#     może być w denerze 3 liniowy wpis:
+# liczba produktów
+# zniżka
+# 
+# może też być zniżka zapisana jako
+# Aktuellstatt [stara cena] cena
+# lub 
+# Aktion statt [stara cena] cena
+#
+#w migrosie poprawić preprocessing zdjęć, żeby dobrze sobie radził z niebieskim tłem
+#w coop jest format prawie jak w migrosie, za to tło jest białe
