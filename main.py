@@ -7,17 +7,20 @@ from pathlib import Path
 from datetime import datetime
 from typing import List, Tuple, Set
 
+from paddleocr import PaddleOCR  # <<< ADDED: Import PaddleOCR
+
 # Import from our new modules
 from config import (
     load_configuration, Configuration,
     OCR_CACHE_DIR, OUTPUT_DIR, CORRECTION_FILES_DIR, DEBUG_IMG_DIR,
-    MANUAL_INPUT_FILENAME, POLISH_TRANSLATIONS_FILENAME
+    MANUAL_INPUT_FILENAME
 )
 from data_models import ReceiptItem
 from processing.receipt_processor import ReceiptProcessor
 from parsers.base_parser import BaseParser
 from parsers.denner_parser import DennerParser
 from parsers.lidl_parser import LidlParser
+from parsers.migros_parser import MigrosParser # <<< ADDED: Import your new Migros parser
 import data_utils
 import reporting
 
@@ -29,9 +32,8 @@ def get_parser(shop_name: str) -> BaseParser:
         return DennerParser()
     elif shop_name == 'lidl':
         return LidlParser()
-    # To add a new shop (e.g., 'coop'), you would add:
-    # elif shop_name == 'coop':
-    #     return CoopParser()
+    elif shop_name == 'migros': # <<< ADDED: Case for Migros
+        return MigrosParser()
     else:
         raise ValueError(f"Unknown or unsupported shop: {shop_name}")
 
@@ -61,7 +63,8 @@ def setup_environment(debug_mode: bool):
 
 # --- Main Execution Pipeline ---
 
-def process_receipts(files: List[Path], config: Configuration, args: argparse.Namespace) -> Tuple[List[ReceiptItem], float, Set[Tuple[str, str]]]:
+# <<< CHANGED: Function now accepts the paddle_engine
+def process_receipts(files: List[Path], config: Configuration, args: argparse.Namespace, paddle_engine: PaddleOCR) -> Tuple[List[ReceiptItem], float, Set[Tuple[str, str]]]:
     """Process all receipt images and collect the initial data."""
     all_items = []
     total_ocr_time = 0.0
@@ -69,7 +72,14 @@ def process_receipts(files: List[Path], config: Configuration, args: argparse.Na
     parser = get_parser(args.shop)
 
     for image_path in files:
-        processor = ReceiptProcessor(image_path, parser=parser, shop_name=args.shop, debug=args.debug)
+        # <<< CHANGED: Pass the paddle_ocr_engine to the processor
+        processor = ReceiptProcessor(
+            image_path,
+            parser=parser,
+            shop_name=args.shop,
+            paddle_ocr_engine=paddle_engine, # Pass the initialized engine
+            debug=args.debug
+        )
         items, ocr_duration, missing = processor.process(config)
         all_items.extend(items)
         total_ocr_time += ocr_duration
@@ -86,7 +96,6 @@ def finalize_data(items: List[ReceiptItem], config: Configuration) -> List[Recei
 
     items = data_utils.apply_corrections(items, config.corrections_map)
     
-    # Final sort and assignment of order numbers and PIDs
     items.sort()
     
     final_items = []
@@ -131,7 +140,8 @@ def generate_reports(items: List[ReceiptItem], config: Configuration, missing_na
 def main():
     parser = argparse.ArgumentParser(description="Process receipt images to extract itemized data.")
     parser.add_argument("input_path", help="Path to a receipt image file OR a directory of images.")
-    parser.add_argument("--shop", choices=['denner', 'lidl'], required=True, help="The shop the receipt is from.")
+    # <<< CHANGED: Added 'migros' to the available choices
+    parser.add_argument("--shop", choices=['denner', 'lidl', 'migros'], required=True, help="The shop the receipt is from.")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode to save processed images.")
     args = parser.parse_args()
     
@@ -143,9 +153,22 @@ def main():
     files_to_process = get_files_to_process(Path(args.input_path))
     if not files_to_process:
         return
+        
+    # <<< ADDED: Initialize PaddleOCR engine once at the start
+    print("\n" + "="*20 + " Initializing OCR Engines " + "="*19)
+    # The engine is only loaded if needed, but we define the variable.
+    paddle_engine = None
+    if args.shop == 'migros':
+        print("Initializing PaddleOCR engine (this may take a moment)...")
+        # Use lang='de' for German, add use_textline_orientation for better results
+        paddle_engine = PaddleOCR(lang='de', use_textline_orientation=True)
+        print("PaddleOCR engine ready.")
+    else:
+        print("Tesseract will be used for OCR.")
 
     # 2. Process
-    all_items, total_ocr_time, all_missing_names = process_receipts(files_to_process, config, args)
+    # <<< CHANGED: Pass the engine to the processing function
+    all_items, total_ocr_time, all_missing_names = process_receipts(files_to_process, config, args, paddle_engine)
     
     # 3. Finalize
     final_items = finalize_data(all_items, config)

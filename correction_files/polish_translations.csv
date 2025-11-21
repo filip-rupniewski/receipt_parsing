@@ -1,72 +1,98 @@
 nr;product_name;polish_name
-1;D-Schokolade Nuss;czekolada z orzechami
+1;Aprikosen marmelade 60%;dżem morelowy 60%
 2;ASC Lachsabschnitte geräuchert;łosoś wędzony
 3;Bananen;banany
-4;Berliner;pączek
-5;Bio Karottensaft;sok marchwiowy
-6;Butte mit IP-Suisse Mehl;rogalik
-7;Calif. Walnusskernhälfte;orzechy włoskie
-8;D-Joghurt Heidelbeer;jogurt jagodowy
-9;D-Passata di pomod let;passata
-10;D-Eier Import Boden.;jajka 53g import sztuki
-11;D-Joghurt Kirsche;jogurt wiśniowy
-12;D-Joghurt Vanilie;jogurt waniliowy
-13;D-Müesli Traube-Nuss;musli
-14;D-Nusskernmischung unge;orzechy mieszane
-15;D-Rinds-Hackfleisch;mięso mielone wołowe
-16;D-Tomme suisse Rund;ser pleśniowy tomme
-17;D-Vollmilch Past 3,5%;mleko 3,5
-18;Danner Rapsöl;olej rzepakowy
-19;Delikatess Nierstückbraten;polędwica
-20;Denner Hörnli;makaron
-21;Denner Kaisergemüse;warzywa mrożone
-22;Denner Bananen Ofenverka;banany
-23;Denner Orangensaft;sok pomarańczowy
-24;Denner Edamer Scheiben;ser edamer
-25;Denner Gouda in Scheibe;ser gouda
-26;Denner Hackfle gemischt;mięso mielone mieszane
-27;Denner Norweg Portionen;łosoś mrożony
-28;Denner Oregano;oregano
-29;Denner Reis perboiled;ryż parboiled
-30;Denner Tomatenpüree;pomidory w tubce
-31;Ecoma Toilettenpapi;papier toaletowy 200 2 warstwy
-32;Flachpfirsiche;brzoskwinie ufo
-33;Forellenfilets geräuchert;pstrąg wędzony
-34;French Croissant;rogalik sztuka
-35;Fruchtjoghurt Heidelbeer;jogurt jagodowy
-36;Fruchtaufstrich Schwarzkirsche;dżem wiśniowy 62%
-37;Gebührensack Stedt Bern 17l;worki na śmieci 17l
-38;Gurken;ogórek szt
-39;Hackfleisch gemischt;mięso mielone mieszane
-40;Henry Lambertz Best Se;ciastka Henry Lambertz Best Selection 1 kg
-41;IP-Suisse Krustenbrot;chleb
-42;IP-Suisse Lauge mit Sal;precel
-43;IP-Suisse Zwiebeln Offen kg;cebule kg
-44;LaMole Sfornatini Rosma;paluszki włoskie
-45;Lenor Goldene Orchide;płyn do płukania lenor
-46;Mulino Bianco Molinetti;ciastka Mulino Bianco
-47;Nuts Royal;mieszanka orzechów bez włoskich
-48;Pain mit IP-Suisse Mehl;chleb
-49;Parboiled Spitzenreis;ryż parboiled
-50;Pfirsiche;brzoskwinie
-51;Pistazien;pistacje
-52;Rinderhackfleisch;mięso mielone wołowe
-53;Rispentomaten Offenverka kg;pomidory
-54;Ruchbrot;chleb
-55;Rustico Giofel mit IPS;rogalik sztuka
-56;Terra Natura Rüebli;marchewki
-57;Schoggigipfeli;rogalik z czekoladą
-58;Schweineragout;mięso wieprzowe
-59;Schweins-Voressen;mięso wieprzowe
-60;Schweinsnierstück-Steak;mięso wieprzowe na kotlety
-61;Skandin Rauchlachs, ASC;łosoś wędzony
-62;Steinofenpizza Schinken;pizza mrożona
-63;TN Gemischter Blattsalat;sałata mieszanka
-64;TN Mischsalat;sałata mieszanka
-65;Thai Kitch. Ge. Curry Pa.;pasta curry
-66;Tomaten Netz;pomidory
-67;Tomaten;pomidory
-68;Vanillejoghurt;jogurt waniliowy
-69;Vollmilch 3,5%;mleko 3,5
-70;Zwiebeln gelb;cebula
-71;Nierstuck Schwein;polędwica wieprzowa
+4;Bananen;banany
+5;Berliner;pączek
+6;Bio Buchweizen;kasza gryczana
+7;Bio Karottensaft;sok marchwiowy
+8;Bio Vollmilch Past. 3,5%;mleko 3,5
+9;Butte mit IP-Suisse Mehl;rogalik
+10;Calif. Walnusskernhälfte;orzechy włoskie
+11;D-Eier Import Boden.;jajka 53g import sztuki
+12;D-Joghurt Heidelbeer;jogurt jagodowy
+13;D-Joghurt Kirsche;jogurt wiśniowy
+14;D-Joghurt Vanilie;jogurt waniliowy
+15;D-Müesli Traube-Nuss;musli
+16;D-Nusskernmischung unge;orzechy mieszane
+17;D-Passata di pomod let;passata
+18;D-Rinds-Hackfleisch;mięso mielone wołowe
+19;D-Schokolade Nuss;czekolada z orzechami
+20;D-Tomme suisse Rund;ser pleśniowy tomme
+21;D-Vollmilch Past 3,5%;mleko 3,5
+22;Danner Rapsöl;olej rzepakowy
+23;Delikatess Nierstückbraten;polędwica
+24;Denner Bananen Ofenverka;banany
+25;Denner Bananen Ofenverka;banany
+26;Denner Edamer Scheiben;ser edamer
+27;Denner Gouda in Scheibe;ser gouda
+28;Denner Hackfle gemischt;mięso mielone mieszane
+29;Denner Hörnli;makaron
+30;Denner Kaisergemüse;warzywa mrożone
+31;Denner Norweg Portionen;łosoś mrożony
+32;Denner Orangensaft;sok pomarańczowy
+33;Denner Oregano;oregano
+34;Denner Reis perboiled;ryż parboiled
+35;Denner Tomatenpüree;pomidory w tubce
+36;Ecoma Toilettenpapi;papier toaletowy 200 2 warstwy
+37;Ferrero Raffaello;Ferrero Raffaello
+38;Flachpfirsiche;brzoskwinie ufo
+39;Forellenfilets geräuchert;pstrąg wędzony
+40;French Croissant;rogalik sztuka
+41;Fruchtaufstrich Schwarzkirsche;dżem wiśniowy 62%
+42;Fruchtjoghurt Heidelbeer;jogurt jagodowy
+43;Gebührensack Stedt Bern 17l;worki na śmieci 17l
+44;Gurken;ogórek szt
+45;Gurken;ogórki
+46;Hackfleisch gemischt;mięso mielone mieszane
+47;Henry Lambertz Best Se;ciastka Henry Lambertz Best Selection 1 kg
+48;IP-Suisse Krustenbrot;chleb
+49;IP-Suisse Lauge mit Sal;precel
+50;IP-Suisse Zwiebeln Offen kg;cebule kg
+51;Karotten;marchewki
+52;Kartoffeln festkochend;ziemniaki
+53;Kohlrabi;kalarepa
+54;LaMole Sfornatini Rosma;paluszki włoskie
+55;Lenor Goldene Orchide;płyn do płukania lenor
+56;MBud Bananen;banany
+57;MBud Hörnli;makaron
+58;MBud Orangensaft;sok pomarańczowy
+59;MBud Passierte Tomaten;pomidory w tubce
+60;MBud Pesto Genovese;pesto
+61;MBud Risotto Reis;ryż
+62;MBud Ruchbrot;chleb
+63;MClass IPS Halbweissmehl;mąka półbiała
+64;MClass Joghurt Heidelbeere;jogurt jagodowy
+65;Mischsalat;sałata mieszanka
+66;Mulino Bianco Molinetti;ciastka Mulino Bianco
+67;Nierstuck Schwein;polędwica wieprzowa
+68;Nuts Royal;mieszanka orzechów bez włoskich
+69;Pain mit IP-Suisse Mehl;chleb
+70;Parboiled Spitzenreis;ryż parboiled
+71;Pfirsiche;brzoskwinie
+72;Pistazien;pistacje
+73;Rinderhackfleisch;mięso mielone wołowe
+74;Rispentomaten;pomidory
+75;Rispentomaten Offenverka kg;pomidory
+76;Ruchbrot;chleb
+77;Rustico Giofel mit IPS;rogalik sztuka
+78;Schoggigipfeli;rogalik z czekoladą
+79;Schweineragout;mięso wieprzowe
+80;Schweins-Voressen;mięso wieprzowe
+81;Schweinsnierstück-Steak;mięso wieprzowe na kotlety
+82;Skandin Rauchlachs, ASC;łosoś wędzony
+83;Steinofenpizza Schinken;pizza mrożona
+84;Tafelessig;ocet
+85;Terra Natura Rüebli;marchewki
+86;Thai Kitch. Ge. Curry Pa.;pasta curry
+87;TN Gemischter Blattsalat;sałata mieszanka
+88;TN Mischsalat;sałata mieszanka
+89;Tomaten;pomidory
+90;Tomaten Netz;pomidory
+91;Trauben weiss kernlos;winogrona bez pestek
+92;Vanillejoghurt;jogurt waniliowy
+93;Various Foods;różne produkty spożywcze
+94;Vollmilch 3,5%;mleko 3,5
+95;Wiesenmilch Voll Past. 3,5%;mleko 3,5
+96;Zwiebeln;cebula
+97;Zwiebeln gelb;cebula

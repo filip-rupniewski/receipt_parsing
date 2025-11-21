@@ -1,0 +1,8 @@
+może być w denerze 3 liniowy wpis:
+liczba produktów
+zniżka
+
+może też być zniżka zapisana jako
+Aktuellstatt [stara cena] cena
+lub 
+Aktion statt [stara cena] cena
