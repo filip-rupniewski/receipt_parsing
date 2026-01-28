@@ -182,17 +182,14 @@ class ReceiptProcessor:
         text = None
 
         # === OCR ENGINE ROUTER ===
-        if self.shop_name == 'migros':
-            print("   -> Using PaddleOCR engine for Migros receipt.")
-            if not self.paddle_ocr_engine:
-                print("Error: Migros shop detected but PaddleOCR engine was not provided.")
-                return None, 0.0
-            
+        if self.shop_name in ['migros', 'coop'] and self.paddle_ocr_engine:
+            print(f"   -> Using PaddleOCR engine for {self.shop_name} receipt.")
             self.processed_image = self._preprocess_image_paddle()
             if self.processed_image is not None:
                 text = self._perform_ocr_paddle(self.processed_image)
         
-        else: # Default to Tesseract for all other shops
+        else: # Default to Tesseract for all other shops or if PaddleOCR engine is missing
+            print(f"   -> Using Tesseract engine (Shop: {self.shop_name}).")
             print("   -> Using Tesseract engine.")
             self.processed_image = self._preprocess_image_tesseract()
             if self.processed_image is not None:

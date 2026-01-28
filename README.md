@@ -126,7 +126,29 @@ The script's power comes from its ability to learn from corrections via several 
 -   **Translated CSV File (Optional):** If you provide a `polish_translations.csv` file, a second output `polish_receipt_data_... .csv` will be created with product names translated.
 -   **Console Output:** You will see a progress log, a preview of the first 20 processed items, a final summary of product counts, and performance metrics.
 
+## Receipt Extraction & Preprocessing
+
+For images containing multiple receipts or receipts with complex rotations, a dedicated extraction script is provided. This script handles:
+- **Automatic Multi-Receipt Detection**: Finds all receipt regions in a single high-resolution image.
+- **Perspective Unwarping**: Uses 4-vertex detection to square up each receipt into a clean, level rectangle.
+- **Reading Order Sorting**: Automatically sorts extracted receipts from top-to-bottom and left-to-right.
+
+### How to Use the Extractor
+
+Run `extracting_receipts.py` before the main OCR process if you have photos with multiple receipts:
+
+```bash
+python3 extracting_receipts.py --input "path/to/multiple_receipts.jpg" --output "extracted_receipts_folder"
+```
+
+The script will:
+1. Save individual unwarped crops as `receipt_001.jpg`, `receipt_002.jpg`, etc. in the output folder.
+2. Generate a `debug_boxes.jpg` file showing the detected boundaries and their processing order.
+
+---
+
 ## Future Improvements (TODO)
 
 -   [x] Add a mechanism for purely manual entries (`manual_input.csv`).
+-   [x] Implement robust multi-receipt extraction and unwarping (`extracting_receipts.py`).
 -   [ ] Expand support for additional supermarket receipt formats (e.g., Coop, Migros).

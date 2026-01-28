@@ -1,4 +1,7 @@
 # main.py
+import os
+os.environ['FLAGS_use_onednn'] = '0'
+
 
 import argparse
 import time
@@ -21,6 +24,7 @@ from parsers.base_parser import BaseParser
 from parsers.denner_parser import DennerParser
 from parsers.lidl_parser import LidlParser
 from parsers.migros_parser import MigrosParser # <<< ADDED: Import your new Migros parser
+from parsers.coop_parser import CoopParser
 import data_utils
 import reporting
 
@@ -34,6 +38,8 @@ def get_parser(shop_name: str) -> BaseParser:
         return LidlParser()
     elif shop_name == 'migros': # <<< ADDED: Case for Migros
         return MigrosParser()
+    elif shop_name == 'coop':
+        return CoopParser()
     else:
         raise ValueError(f"Unknown or unsupported shop: {shop_name}")
 
@@ -141,7 +147,7 @@ def main():
     parser = argparse.ArgumentParser(description="Process receipt images to extract itemized data.")
     parser.add_argument("input_path", help="Path to a receipt image file OR a directory of images.")
     # <<< CHANGED: Added 'migros' to the available choices
-    parser.add_argument("--shop", choices=['denner', 'lidl', 'migros'], required=True, help="The shop the receipt is from.")
+    parser.add_argument("--shop", choices=['denner', 'lidl', 'migros', 'coop'], required=True, help="The shop the receipt is from.")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode to save processed images.")
     args = parser.parse_args()
     
@@ -154,17 +160,9 @@ def main():
     if not files_to_process:
         return
         
-    # <<< ADDED: Initialize PaddleOCR engine once at the start
-    print("\n" + "="*20 + " Initializing OCR Engines " + "="*19)
-    # The engine is only loaded if needed, but we define the variable.
+    # <<< CHANGED: Using Tesseract for all shops to avoid PaddleOCR issues
     paddle_engine = None
-    if args.shop == 'migros':
-        print("Initializing PaddleOCR engine (this may take a moment)...")
-        # Use lang='de' for German, add use_textline_orientation for better results
-        paddle_engine = PaddleOCR(lang='de', use_textline_orientation=True)
-        print("PaddleOCR engine ready.")
-    else:
-        print("Tesseract will be used for OCR.")
+    print("\nTesseract will be used for OCR.")
 
     # 2. Process
     # <<< CHANGED: Pass the engine to the processing function

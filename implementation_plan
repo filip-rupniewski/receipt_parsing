@@ -1,0 +1,53 @@
+Receipt Extraction Plan
+Develop a Python script to detect and extract multiple receipts from a single image using computer vision techniques.
+
+Assumptions
+Contrast: Receipts are white/light-colored or blue (Migros) on a contrasting background. Adaptive thresholding will be used to handle varying colors.
+Layout: Receipts are arranged in approximately 1-2 rows. Sorting logic will handle minor vertical variations.
+Shape: Receipts are roughly rectangular. Distortion/rotation is minimal but handled via deskewing where possible.
+Resolution: The input image has high enough resolution to distinguish individual receipts (test images in paragony 3 confirm high resolution).
+Proposed Changes
+[Core Implementation]
+[NEW] 
+extracting_receipts.py
+The script will contain the following components:
+
+CLI Interface: Using argparse to handle --input and --output arguments.
+Focused Preprocessing:
+Dual detection paths: Combine Adaptive Thresholding (for text/content) and Canny edge detection (for physical paper boundaries).
+Balanced Morphology: Use smaller kernels (e.g., 5x5 - 11x11) for closing and dilation to bridge gaps within a receipt without jumping across the narrow gaps between adjacent receipts in a grid.
+Edge Separation: Prioritize finding the 4 external boundaries. If a large block is detected that clearly contains multiple receipts (based on size/aspect ratio), attempt recursive splitting or use local intensity variance to find the grid lines.
+Grid-Aware Sorting:
+Refine 
+get_reading_order_sorted_contours
+ to handle clear 2-column layouts by detecting the vertical "spine" or alignment of centroids.
+Extraction:
+For each candidate:
+Attempt 4-point approximation (cv2.approxPolyDP).
+If 4 points found, apply Perspective Transform for deskewing.
+Fallback: Use cv2.boundingRect with 15px padding.
+Refinement (Vertex-based Unwarp):
+Vertex Detection: Use convexHull + approxPolyDP to find the exact 4 corners of each receipt from the original image contours.
+Perspective Transform: Apply 
+four_point_transform
+ to map these 4 points to a perfect rectangle.
+Result: A level, unwarped crop of the receipt based on its detected shape.
+Fallback: Use minAreaRect corners if 4 vertices aren't found via approximation.
+Output:
+Save individual crops as receipt_NNN.jpg.
+Generate 
+debug_boxes.jpg
+ showing all detected and numbered regions.
+Code Quality:
+Add type hints to all function signatures and return types.
+Verification Plan
+Automated Tests
+Run with --help to check CLI.
+Run on 
+…/paragony 3/IMG_20260128_124107.jpg
+.
+Manual Verification
+Verify 
+extracted_receipts/debug_boxes.jpg
+ correctly identifies all receipts.
+Check cropped images for quality and deskewing.
