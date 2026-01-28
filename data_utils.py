@@ -6,6 +6,7 @@ import numpy as np
 from pathlib import Path
 from datetime import datetime
 from typing import List, Dict
+from rapidfuzz import process, fuzz
 
 from data_models import ReceiptItem
 
@@ -58,9 +59,21 @@ def insert_manual_items(all_items: List[ReceiptItem], manual_items: List[Receipt
 
 def apply_corrections(items: List[ReceiptItem], corrections_map: Dict[str, dict]) -> List[ReceiptItem]:
     kept_items, corrections_applied, deletions = [], 0, 0
+    correction_keys = list(corrections_map.keys())
+
     for item in items:
+        rule = None
+        # 1. Try exact match
         if item.name in corrections_map:
             rule = corrections_map[item.name]
+        # 2. Try fuzzy match (if > 90% similarity)
+        elif correction_keys:
+            match = process.extractOne(item.name, correction_keys, scorer=fuzz.token_sort_ratio)
+            if match and match[1] >= 90:
+                rule = corrections_map[match[0]]
+                print(f"   -> Fuzzy match: '{item.name}' matched with '{match[0]}' ({match[1]:.1f}%)")
+
+        if rule:
             if rule.get('name') == '-':
                 deletions += 1
                 continue
@@ -73,6 +86,7 @@ def apply_corrections(items: List[ReceiptItem], corrections_map: Dict[str, dict]
             item.status_flag = "" if not np.isnan(item.price) and not np.isnan(item.size) else "!"
             corrections_applied += 1
         kept_items.append(item)
+    
     if corrections_applied > 0:
         print(f"Applied corrections and recalculated metrics for {corrections_applied} items.")
     if deletions > 0:
