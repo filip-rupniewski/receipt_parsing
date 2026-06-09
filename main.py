@@ -1,5 +1,6 @@
 # main.py
 import os
+
 # 1. Disable OneDNN (mkldnn) to prevent the PIR conversion crash
 os.environ['FLAGS_use_mkldnn'] = '0'
 os.environ['FLAGS_use_onednn'] = '0'
@@ -7,6 +8,7 @@ os.environ['FLAGS_use_onednn'] = '0'
 os.environ['FLAGS_enable_pir_api'] = '0'
 os.environ['FLAGS_enable_pir_in_executor'] = '0'
 # 3. Skip the slow connectivity check for PaddleOCR
+# os.environ['PADDLE_PDX_ENABLE_MKLDNN_BYDEFAULT'] = '0'
 os.environ['PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK'] = 'True'
 
 import argparse
@@ -176,7 +178,7 @@ def main():
         print("\nInitializing PaddleOCR engine (this may take a moment on first run)...")
         try:
             paddle_engine = PaddleOCR(
-                use_textline_orientation=True,  
+                use_textline_orientation=False,  
                 lang='german',
                 enable_mkldnn=False  # <--- DODAJ TĘ LINIĘ (Kluczowa poprawka dla Paddle 3.3.0+)
             )
