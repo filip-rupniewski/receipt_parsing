@@ -6,6 +6,8 @@ import numpy as np
 from pathlib import Path
 from datetime import datetime
 from typing import List, Dict
+from rapidfuzz import process, fuzz
+
 
 from data_models import ReceiptItem
 
@@ -77,6 +79,70 @@ def apply_corrections(items: List[ReceiptItem], corrections_map: Dict[str, dict]
         print(f"Applied corrections and recalculated metrics for {corrections_applied} items.")
     if deletions > 0:
         print(f"Deleted {deletions} items based on '-' rule in corrections file.")
+    return kept_items
+
+def is_missing(val) -> bool:
+    """Bezpiecznie sprawdza, czy wartość to None lub NaN (zapobiega błędom TypeError)."""
+    if val is None:
+        return True
+    try:
+        return np.isnan(val)
+    except (TypeError, ValueError):
+        return False
+
+def apply_corrections_levenstein(items: List[ReceiptItem], corrections_map: Dict[str, dict]) -> List[ReceiptItem]:
+    kept_items, corrections_applied, deletions = [], 0, 0
+    # Wyciągamy klucze raz, aby przyspieszyć przeszukiwanie rozmyte
+    map_keys = list(corrections_map.keys())
+    for item in items:
+        fuzzy_match = False
+        # Zabezpieczenie przed pustymi lub błędnymi nazwami z OCR
+        if not item.name or not isinstance(item.name, str):
+            kept_items.append(item)
+            continue
+        matched_key = None
+        # 1. DOKŁADNE DOPASOWANIE (Exact Match - złożoność O(1), czas: ~0 ms)
+        if item.name in corrections_map:
+            matched_key = item.name
+        else:
+            # 2. DOPASOWANIE ROZMYTE (Fuzzy Match - Odległość Levenshteina)
+            # Znormalizowana odległość < 0.1 oznacza podobieństwo > 90%.
+            # fuzz.ratio zwraca wynik od 0 do 100.
+            match_result = process.extractOne(
+                item.name, 
+                map_keys, 
+                scorer=fuzz.ratio, 
+                score_cutoff=80.0  # Próg pewności: 80% podobieństwa
+            )
+            if match_result:
+                fuzzy_match = True
+                matched_key = match_result[0]
+                
+        # Jeśli znaleziono dopasowanie (dokładne lub rozmyte)
+        if matched_key:
+            rule = corrections_map[matched_key]    
+            # Obsługa usuwania "śmieci" (np. rabatów, zaokrągleń)
+            if rule.get('name') in ['-', '[IGNORE]']:
+                deletions += 1
+                continue
+            # Aplikacja poprawnej nazwy
+            if 'name' in rule and item.name != rule['name']:
+                item.name = rule['name']
+            # Aplikacja rozmiaru, jeśli obecny brakuje
+            if 'size' in rule and rule['size'] is not None and is_missing(item.size):
+                item.size = rule['size']
+            # Przeliczenie ceny za jednostkę
+            if not is_missing(item.price) and not is_missing(item.size) and item.size > 0:
+                item.price_per_one = item.price / item.size
+            # Ustawienie flagi statusu
+            item.status_flag = "" if not is_missing(item.price) and not is_missing(item.size) else "!"
+            item.status_flag += "L" if fuzzy_match else ""
+            corrections_applied += 1
+        kept_items.append(item)
+    if corrections_applied > 0:
+        print(f"Applied corrections and recalculated metrics for {corrections_applied} items.")
+    if deletions > 0:
+        print(f"Deleted {deletions} items based on '-' or '[IGNORE]' rule in corrections file.")
     return kept_items
 
 def apply_naive_corrections(items: List[ReceiptItem]):

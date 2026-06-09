@@ -3,8 +3,8 @@
 import csv
 import collections
 from pathlib import Path
-from datetime import datetime
-from typing import List, Dict, Optional, Set
+from datetime import datetime  # noqa: F401
+from typing import List, Dict, Optional
 
 import numpy as np
 

@@ -126,21 +126,79 @@ def merge_nearby_boxes(boxes: List[Tuple[int, int, int, int]], threshold_px: int
                 gap_x = max(0, x2 - (curr_box[0] + curr_box[2]), curr_box[0] - (x2 + w2))
                 gap_y = max(0, y2 - (curr_box[1] + curr_box[3]), curr_box[1] - (y2 + h2))
                 
-                # Merge if gap is small in both directions (or one is zero and other small)
-                # This handles fragments that are adjacent horizontally or vertically
+                # Only merge if gap is small AND there's substantial overlap in at least one dimension
                 if gap_x < threshold_px and gap_y < threshold_px:
-                    # Merge
-                    new_x = min(curr_box[0], x2)
-                    new_y = min(curr_box[1], y2)
-                    new_w = max(curr_box[0] + curr_box[2], x2 + w2) - new_x
-                    new_h = max(curr_box[1] + curr_box[3], y2 + h2) - new_y
-                    curr_box = [new_x, new_y, new_w, new_h]
-                    used[j] = True
-                    changed = True
+                    # Calculate overlap in each dimension
+                    overlap_x = min(curr_box[0] + curr_box[2], x2 + w2) - max(curr_box[0], x2)
+                    overlap_y = min(curr_box[1] + curr_box[3], y2 + h2) - max(curr_box[1], y2)
+                    
+                    min_width = min(curr_box[2], w2)
+                    min_height = min(curr_box[3], h2)
+                    
+                    # Require at least 70% overlap in one dimension
+                    if overlap_x > 0.7 * min_width or overlap_y > 0.7 * min_height:
+                        # Merge
+                        new_x = min(curr_box[0], x2)
+                        new_y = min(curr_box[1], y2)
+                        new_w = max(curr_box[0] + curr_box[2], x2 + w2) - new_x
+                        new_h = max(curr_box[1] + curr_box[3], y2 + h2) - new_y
+                        curr_box = [new_x, new_y, new_w, new_h]
+                        used[j] = True
+                        changed = True
         
         merged.append(tuple(curr_box))
     
     return merged
+
+def split_tall_boxes(boxes: List[Tuple[int, int, int, int]], mask: np.ndarray, aspect_threshold: float = 1.5) -> List[Tuple[int, int, int, int]]:
+    """
+    Splits tall boxes that likely contain multiple stacked receipts.
+    Looks for the best split point near the middle of the box.
+    """
+    from scipy.ndimage import gaussian_filter1d
+    result = []
+    
+    for x, y, w, h in boxes:
+        aspect = h / w if w > 0 else 0
+        
+        # If not too tall, keep as is
+        if aspect < aspect_threshold:
+            result.append((x, y, w, h))
+            continue
+        
+        print(f"DEBUG: Analyzing tall box ({x},{y},{w},{h}) aspect={aspect:.2f}")
+        
+        # Extract region and analyze horizontal projection
+        roi = mask[y:y+h, x:x+w]
+        projection = np.sum(roi, axis=1) / 255  # Count white pixels per row
+        
+        # Smooth projection
+        smoothed = gaussian_filter1d(projection, sigma=5)
+        
+        # Look for the best split point in the middle 40% of the box
+        mid_start = int(h * 0.3)
+        mid_end = int(h * 0.7)
+        mid_region = smoothed[mid_start:mid_end]
+        
+        if len(mid_region) > 0:
+            # Find minimum in middle region
+            local_min_idx = np.argmin(mid_region)
+            split_point = mid_start + local_min_idx
+            
+            # Check if this is a significant valley
+            if smoothed[split_point] < np.mean(smoothed) * 0.4:
+                # Split here
+                result.append((x, y, w, split_point))
+                result.append((x, y + split_point, w, h - split_point))
+                print(f"DEBUG: Split into 2 parts at y={split_point}")
+            else:
+                # No clear valley, keep as is
+                result.append((x, y, w, h))
+                print(f"DEBUG: No clear split point found, keeping as is")
+        else:
+            result.append((x, y, w, h))
+    
+    return result
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Extract multiple receipts from an image.")
@@ -168,51 +226,106 @@ def main() -> None:
     det_height = int(orig_height / ratio)
     resized = cv2.resize(image, (det_width, det_height))
     
-    # 2. Preprocessing - Optimized for separated receipts
+    # 2. Preprocessing - Try both tight and loose morphology
     gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
-    
-    # Mild blur to reduce noise while preserving edges
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
     
-    # Adaptive threshold with smaller block size for finer separation
+    # Adaptive threshold
     thresh = cv2.adaptiveThreshold(
         blurred, 255, 
         cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
         cv2.THRESH_BINARY_INV, 
-        blockSize=31,  # Reduced from 51 for better granularity
-        C=15
+        blockSize=25,
+        C=12
     )
     
-    # Optional: Canny for weak edges (helps with low-contrast boundaries)
+    # Canny edges
     edges = cv2.Canny(blurred, 50, 150)
     combined = cv2.bitwise_or(thresh, edges)
     
-    # Morphology: Use SMALL kernel to fill holes inside receipts 
-    # but NOT bridge gaps between them (critical fix!)
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
-    closed = cv2.morphologyEx(combined, cv2.MORPH_CLOSE, kernel)
+    # Remove tiny noise
+    kernel_tiny = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
+    cleaned = cv2.morphologyEx(combined, cv2.MORPH_OPEN, kernel_tiny)
     
-    # Remove small noise
-    kernel_small = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-    closed = cv2.morphologyEx(closed, cv2.MORPH_OPEN, kernel_small)
+    # TIGHT morphology (separates receipts better but may fragment them)
+    kernel_tight = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    closed_tight = cv2.morphologyEx(cleaned, cv2.MORPH_CLOSE, kernel_tight, iterations=1)
+    
+    # Dilate to expand regions (for receipts with sparse text like Denner)
+    kernel_dilate = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
+    closed_tight_dilated = cv2.dilate(closed_tight, kernel_dilate, iterations=2)
+    
+    # LOOSE morphology (connects text better but may merge receipts)
+    kernel_h = cv2.getStructuringElement(cv2.MORPH_RECT, (9, 3))
+    closed_h = cv2.morphologyEx(cleaned, cv2.MORPH_CLOSE, kernel_h, iterations=2)
+    kernel_v = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 9))
+    closed_loose = cv2.morphologyEx(closed_h, cv2.MORPH_CLOSE, kernel_v, iterations=2)
+    
+    # Try both and use whichever gives better results
+    closed = closed_tight  # Start with tight
     
     if args.debug:
-        cv2.imwrite(os.path.join(args.output, "debug_mask.jpg"), closed)
+        cv2.imwrite(os.path.join(args.output, "debug_mask_tight.jpg"), closed_tight)
+        cv2.imwrite(os.path.join(args.output, "debug_mask_tight_dilated.jpg"), closed_tight_dilated)
+        cv2.imwrite(os.path.join(args.output, "debug_mask_loose.jpg"), closed_loose)
+    
+    # 3. Try tight, tight+dilated, and loose morphology
+    det_area = det_width * det_height
+    
+    def count_valid_candidates(mask_input):
+        cnts, _ = cv2.findContours(mask_input, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        count = 0
+        max_aspect = 0
+        for c in cnts:
+            area = cv2.contourArea(c)
+            if not (det_area * 0.008 < area < det_area * 0.6):
+                continue
+            x, y, w, h = cv2.boundingRect(c)
+            aspect = max(w, h) / max(min(w, h), 1)
+            if aspect > 6:
+                continue
+            count += 1
+            max_aspect = max(max_aspect, h / w if w > 0 else 0)
+        return count, cnts, max_aspect
+    
+    tight_count, tight_cnts, tight_max_aspect = count_valid_candidates(closed_tight)
+    tight_dil_count, tight_dil_cnts, tight_dil_max_aspect = count_valid_candidates(closed_tight_dilated)
+    loose_count, loose_cnts, loose_max_aspect = count_valid_candidates(closed_loose)
+    
+    print(f"DEBUG: Tight: {tight_count} (aspect={tight_max_aspect:.2f}), Tight+Dilated: {tight_dil_count} (aspect={tight_dil_max_aspect:.2f}), Loose: {loose_count} (aspect={loose_max_aspect:.2f})")
+    
+    # Use best option: prefer tight morphology if it gives 2-6 candidates
+    if 2 <= tight_count <= 6:
+        closed = closed_tight
+        cnts = tight_cnts
+        print("DEBUG: Using TIGHT morphology")
+    elif 2 <= tight_dil_count <= 6:
+        closed = closed_tight_dilated
+        cnts = tight_dil_cnts
+        print("DEBUG: Using TIGHT+DILATED morphology")
+    elif 2 <= loose_count <= 6:
+        closed = closed_loose
+        cnts = loose_cnts
+        print("DEBUG: Using LOOSE morphology")
+    else:
+        # Default to tight
+        closed = closed_tight
+        cnts = tight_cnts
+        print("DEBUG: Using TIGHT morphology (default)")
+    
+    if args.debug:
+        cv2.imwrite(os.path.join(args.output, "debug_mask_final.jpg"), closed)
     
     # 3. Contour Detection
-    cnts, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     print(f"DEBUG: Found {len(cnts)} raw contours")
-    
-    det_area = det_width * det_height
     candidate_boxes = []
     
     for c in cnts:
         area = cv2.contourArea(c)
         x, y, w, h = cv2.boundingRect(c)
         
-        # Area filtering: between 1.5% and 60% of detection image
-        # (avoids tiny noise and the entire image border)
-        if not (det_area * 0.015 < area < det_area * 0.6):
+        # Area filtering: between 0.8% and 60% of detection image
+        if not (det_area * 0.008 < area < det_area * 0.6):
             continue
             
         # Aspect ratio filtering: Receipts are roughly rectangular
@@ -226,20 +339,23 @@ def main() -> None:
     
     print(f"DEBUG: {len(candidate_boxes)} candidates after filtering")
     
-    # Merge nearby boxes conservatively (only if very close)
-    # This handles receipts that might be split into 2-3 fragments due to lighting
-    box_coords = [(b[0], b[1], b[2], b[3]) for b in candidate_boxes]
-    merged_boxes = merge_nearby_boxes(box_coords, threshold_px=25)
+    # Skip merging - rely on splitting instead to separate stacked receipts
+    merged_boxes = [(b[0], b[1], b[2], b[3]) for b in candidate_boxes]
     
-    print(f"DEBUG: {len(merged_boxes)} boxes after merging")
+    print(f"DEBUG: {len(merged_boxes)} boxes (no merging)")
     
-    if not merged_boxes:
+    # Split tall boxes that likely contain multiple stacked receipts
+    split_boxes = split_tall_boxes(merged_boxes, closed, aspect_threshold=1.5)
+    
+    print(f"DEBUG: {len(split_boxes)} boxes after splitting")
+    
+    if not split_boxes:
         print("Error: No receipt regions detected.")
         sys.exit(1)
     
     # Convert back to original resolution contours
     final_regions = []
-    for x, y, w, h in merged_boxes:
+    for x, y, w, h in split_boxes:
         # Create a rectangular contour from the bounding box
         pts = np.array([
             [[x, y]], 

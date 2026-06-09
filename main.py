@@ -1,7 +1,13 @@
 # main.py
 import os
+# 1. Disable OneDNN (mkldnn) to prevent the PIR conversion crash
+os.environ['FLAGS_use_mkldnn'] = '0'
 os.environ['FLAGS_use_onednn'] = '0'
-
+# 2. Disable the new PIR (Paddle Intermediate Representation) engine
+os.environ['FLAGS_enable_pir_api'] = '0'
+os.environ['FLAGS_enable_pir_in_executor'] = '0'
+# 3. Skip the slow connectivity check for PaddleOCR
+os.environ['PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK'] = 'True'
 
 import argparse
 import time
@@ -100,8 +106,8 @@ def finalize_data(items: List[ReceiptItem], config: Configuration) -> List[Recei
     if manual_items:
         items = data_utils.insert_manual_items(items, manual_items)
 
-    items = data_utils.apply_corrections(items, config.corrections_map)
-    
+    # items = data_utils.apply_corrections(items, config.corrections_map)
+    items = data_utils.apply_corrections_levenstein(items, config.corrections_map)
     items.sort()
     
     final_items = []
@@ -160,9 +166,25 @@ def main():
     if not files_to_process:
         return
         
-    # <<< CHANGED: Using Tesseract for all shops to avoid PaddleOCR issues
+    # # <<< CHANGED: Using Tesseract for all shops to avoid PaddleOCR issues
     paddle_engine = None
     print("\nTesseract will be used for OCR.")
+
+    if args.shop == 'migros':
+        print("Migros, so using PaddleOCR.")
+        # --- ENABLE PADDLEOCR ---
+        print("\nInitializing PaddleOCR engine (this may take a moment on first run)...")
+        try:
+            paddle_engine = PaddleOCR(
+                use_textline_orientation=True,  
+                lang='german',
+                enable_mkldnn=False  # <--- DODAJ TĘ LINIĘ (Kluczowa poprawka dla Paddle 3.3.0+)
+            )
+            print("PaddleOCR initialized successfully.")
+        except Exception as e:
+            print(f"Error initializing PaddleOCR: {e}. Falling back to Tesseract.")
+            paddle_engine = None
+        # ------------------------
 
     # 2. Process
     # <<< CHANGED: Pass the engine to the processing function

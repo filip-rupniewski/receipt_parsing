@@ -2,7 +2,7 @@
 
 import re
 import numpy as np
-from typing import List, Optional, Tuple, Dict, Set
+from typing import List, Optional, Tuple, Dict
 
 from data_models import ReceiptItem
 from .base_parser import BaseParser

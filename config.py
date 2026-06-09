@@ -31,6 +31,10 @@ STANDARD_SIZES_FILENAME = "standard_sizes.csv"
 POLISH_TRANSLATIONS_FILENAME = "polish_translations.csv"
 CORRECTION_TEMPLATE_FILENAME = "product_name_correction_template.csv"
 
+PRODUCT_ALIAS_DICTIONARY = "correction_files/product_alias_dictionary.csv"
+TRANSLATION_AND_SIZE_DICTIONARY = "correction_files/name_translation_size.csv"
+
+
 # CSV Headers
 CSV_HEADER = ['PID', 'status', 'date', 'order number', 'product name', 'size/volume', 'price', 'price per 1', 'shop', 'discount']
 
