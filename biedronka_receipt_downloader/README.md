@@ -30,6 +30,6 @@ numer i hasło, a weryfikację i przyciski „Dalej”/„Zaloguj” klikasz sam
 pomijane.
 
 API panelu (odczytane z ruchu sieciowego):
-- `POST /panel/ajax/paragons` (form: `page`, `begin_data`, `end_data`, `order`, `short=1`)
+- `POST /panel/ajax/paragons` (form: `page`, `begin_data`, `end_data`, `order`, `short=0`; `short=1` pomija część paragonów)
   → `{"Receipts": [...], "NumberOfPages": n}`
 - `GET /panel/download/json/{Id}` → plik e-paragonu

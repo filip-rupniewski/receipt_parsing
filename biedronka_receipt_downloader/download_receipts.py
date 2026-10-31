@@ -272,7 +272,7 @@ def list_receipts(page: Page, since: date) -> list[dict]:
                     "begin_data": begin.isoformat(),
                     "end_data": end.isoformat(),
                     "order": "desc",
-                    "short": "1",
+                    "short": "0",  # "1" (domyślne w panelu) pomija część paragonów
                 },
                 headers={"X-Requested-With": "XMLHttpRequest", "Referer": PANEL_URL},
             )
