@@ -4,6 +4,7 @@ credentials.json
 .browser_profile/
 # Pobrane paragony (dane osobowe)
 biedronka_receipts_jsons/
+biedronka_receipts_parsed/
 # Zrzuty z trybu --discover
 discovery/
 .venv/

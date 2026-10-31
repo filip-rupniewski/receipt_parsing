@@ -4,6 +4,18 @@ Pobiera e-paragony z https://moja.biedronka.pl/panel/paragons jako JSON
 (ten sam plik, co przycisk „JSON” w panelu) do `biedronka_receipts_jsons/`.
 Paragony już pobrane są pomijane.
 
+Po pobraniu nowych paragonów automatycznie uruchamia się `convert_receipts.py`
+(można go też uruchomić osobno: `uv run convert_receipts.py`). Konwerter dekoduje
+z pola `data` podpisany dokument JPK_KASA_PARAGON i zapisuje do
+`biedronka_receipts_parsed/`:
+
+- `paragon_<Id>.json`: jeden paragon (data, sklep, sumy, VAT, płatności, pozycje),
+- `all_receipts.json`: wszystkie paragony,
+- `all_items.json`: płaska lista wszystkich pozycji z datą i numerem paragonu.
+
+Kwoty są w złotych. Pozycja ma pola `name`, `quantity`, `is_weighted`, `unit_price`,
+`price_before_discount`, `discount`, `price` (po rabacie), `vat_id`, `vat_rate`.
+
 ## Konfiguracja
 
 ```
@@ -12,7 +24,8 @@ uv sync
 uv run playwright install chromium
 ```
 
-`credentials.json`, `.browser_profile/`, `biedronka_receipts_jsons/` i `discovery/`
+`credentials.json`, `.browser_profile/`, `biedronka_receipts_jsons/`,
+`biedronka_receipts_parsed/` i `discovery/`
 są w `.gitignore`.
 
 ## Użycie

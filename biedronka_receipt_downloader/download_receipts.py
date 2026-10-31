@@ -330,6 +330,9 @@ def download_new(page: Page, since: date) -> None:
         page.wait_for_timeout(300)  # nie zasypujemy serwera zapytaniami
     if failed:
         print(f"Nie udało się pobrać {len(failed)} paragonów: {', '.join(failed)}")
+    if len(new) > len(failed):
+        import convert_receipts
+        convert_receipts.main()
 
 
 # --------------------------------------------------------------------------- #
