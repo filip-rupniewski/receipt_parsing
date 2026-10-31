@@ -42,13 +42,13 @@ SIZES_FILE = BASE_DIR / "biedronka_package_sizes.csv"
 SIZES_HEADER = ["nazwa", "wielkość opakowania", "jednostka", "przykładowa data", "przykładowa cena"]
 # ręcznie uzupełniane czytelne nazwy produktów (w repo)
 NAMES_FILE = BASE_DIR / "biedronka_product_names.csv"
-NAMES_HEADER = ["nazwa z kasy", "nazwa czytelna"]
+NAMES_HEADER = ["nazwa z kasy", "nazwa czytelna", "kategoria"]
 
 HEADER = [
     "data", "nazwa", "procent/sztuk/kg", "cena", "za kg/l/sztukę", "sklep", "W tym rabat",
     "rabat w %",
     # informacje dodatkowe
-    "nazwa z kasy", "jednostka", "ilość z kasy", "cena jednostkowa z kasy", "cena przed rabatem",
+    "nazwa z kasy", "kategoria", "jednostka", "ilość z kasy", "cena jednostkowa z kasy", "cena przed rabatem",
     "stawka VAT", "godzina", "nr sklepu", "adres", "kod pocztowy", "miasto",
     "nr kasy", "kasjer", "nr paragonu", "id paragonu", "pozycja na paragonie",
     "suma paragonu", "rabat na paragonie", "płatność", "sprzedawca", "NIP",
@@ -111,33 +111,34 @@ def amount_and_unit(item: dict, manual: dict) -> tuple[float, str]:
     return item["quantity"], "szt"
 
 
-def read_names_file() -> dict[str, str]:
-    """{nazwa z kasy: nazwa czytelna} - czytelna może być pusta."""
-    names: dict[str, str] = {}
+def read_names_file() -> dict[str, tuple[str, str]]:
+    """{nazwa z kasy: (nazwa czytelna, kategoria)} - obie mogą być puste."""
+    names: dict[str, tuple[str, str]] = {}
     if NAMES_FILE.exists():
         with NAMES_FILE.open(encoding="utf-8-sig", newline="") as f:
             reader = csv.reader(f, delimiter=";")
             next(reader, None)
             for row in reader:
                 if row and row[0].strip():
-                    names[row[0].strip()] = row[1].strip() if len(row) > 1 else ""
+                    row = [c.strip() for c in row] + ["", ""]
+                    names[row[0]] = (row[1], row[2])
     return names
 
 
-def update_names_file(receipts: list[dict], names: dict[str, str]) -> int:
-    """Dopisuje nowe nazwy z kasy (z pustą nazwą czytelną); wpisane zostają bez zmian."""
+def update_names_file(receipts: list[dict], names: dict[str, tuple[str, str]]) -> int:
+    """Dopisuje nowe nazwy z kasy (z pustą nazwą i kategorią); wpisane zostają bez zmian."""
     names = dict(names)
     for r in receipts:
         for item in r["items"]:
-            names.setdefault(item["name"], "")
+            names.setdefault(item["name"], ("", ""))
     tmp = NAMES_FILE.with_suffix(".csv.part")
     with tmp.open("w", newline="", encoding="utf-8-sig") as f:
         writer = csv.writer(f, delimiter=";")
         writer.writerow(NAMES_HEADER)
         for raw in sorted(names, key=str.lower):
-            writer.writerow([raw, names[raw]])
+            writer.writerow([raw, *names[raw]])
     tmp.replace(NAMES_FILE)
-    return sum(1 for v in names.values() if not v)
+    return sum(1 for name, cat in names.values() if not name or not cat)
 
 
 def update_sizes_file(receipts: list[dict], manual: dict) -> int:
@@ -181,7 +182,7 @@ def payments_text(receipt: dict) -> str:
     return ", ".join(parts)
 
 
-def rows(receipts: list[dict], manual: dict, names: dict[str, str]):
+def rows(receipts: list[dict], manual: dict, names: dict[str, tuple[str, str]]):
     for r in receipts:
         when = datetime.fromisoformat(r["datetime"])
         store = r["store"]
@@ -192,7 +193,7 @@ def rows(receipts: list[dict], manual: dict, names: dict[str, str]):
             per_unit = item["price"] / amount if amount else None
             yield [
                 when.strftime("%d.%m.%Y"),
-                names.get(item["name"]) or item["name"],
+                names.get(item["name"], ("", ""))[0] or item["name"],
                 num(amount, 3),
                 num(item["price"]),
                 num(per_unit),
@@ -200,6 +201,7 @@ def rows(receipts: list[dict], manual: dict, names: dict[str, str]):
                 num(item["discount"]) if item["discount"] else "",
                 f"{num(discount_pct, 1)}%" if discount_pct else "",
                 item["name"],
+                names.get(item["name"], ("", ""))[1],
                 unit,
                 num(item["quantity"], 3),
                 num(item["unit_price"]),
@@ -241,7 +243,8 @@ def main() -> None:
     print(f"Zapisano {n} pozycji -> {OUTPUT_FILE.relative_to(BASE_DIR)}")
     untranslated = update_names_file(receipts, names)
     if untranslated:
-        print(f"Produkty bez czytelnej nazwy: {untranslated} - uzupełnij {NAMES_FILE.name}")
+        print(f"Produkty bez czytelnej nazwy lub kategorii: {untranslated} "
+              f"- uzupełnij {NAMES_FILE.name}")
     missing = update_sizes_file(receipts, manual)
     if missing:
         print(f"Produkty bez wielkości opakowania: {missing} - uzupełnij {SIZES_FILE.name}")

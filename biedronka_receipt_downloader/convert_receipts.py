@@ -197,6 +197,9 @@ def main() -> None:
     import export_csv
     export_csv.main()
 
+    import analyze_spending
+    analyze_spending.main([])
+
 
 if __name__ == "__main__":
     main()

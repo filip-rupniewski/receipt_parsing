@@ -1,36 +1,36 @@
-﻿nazwa z kasy;nazwa czytelna
-Banan Luz;banany
-Brzoskwinia Luz;brzoskwinie
-Chleb 500 g;chleb
-Chleb Słonecz 480g;chleb słonecznikowy
-CIASTKA Z CZEKOLADĄ;ciastka z czekoladą
-CzekolArachAll100g;czekolada z orzeszkami arachidowymi
-HerbariumMiętax30;mięta Herbarium
-HerbariumPokrzywax20;pokrzywa Herbarium
-HerbRemseyOwoceLeśn;herbata Owoce Leśne Remsey
-Jog Naturalny 400g;jogurt naturalny
-Kasza Grycz 4X100g;kasza gryczana
-KetchupPikan560g;ketchup pikantny
-KiełbKrakSucha260g;kiełbasa krakowska sucha
-KonfJagodRapso240g;konfitura jagodowa Rapsodia
-MakPełnoFusPas500g;makaron pełnoziarnisty fusilli Pastani
-MakŚwidDobrusia1kg;makaron świderki Dobrusia
-MLEKO POLSK3,2 1l;mleko 3,2% Mlekowita
-MlekoŚw3,2 1l;mleko 3,2% Mleczna Dolina
-MuslOwocVitanella1kg;musli owocowe Vitanella
-MąkaPełnozŻytnia1kg;mąka żytnia pełnoziarnista
-OlejRzepWielkop 1l;olej rzepakowy Wielkopolski
-PestoZieloneSK190g;pesto zielone Gusto Bello
-Pomarańcze Des Luz;pomarańcze deserowe
-Pomid gał luz;pomidory gałązka
-PrzyprCurrKami20 g;przyprawa curry Kamis
-RogalCroissant 60g;rogal croissant
-RogalŚwiętom 200g;rogal świętomarciński
-SerGoudaŚwiat 150g;ser gouda Światowid
-SerGoudaŚwiat 300g;ser gouda Światowid
-SerMorskiŚwi  500g;ser morski Światowid
-SezamkiBonitki;sezamki Bonitki
-TrioWarzMroKra750g;mrożone trio warzyw
-TwarGarwoMix;twaróg Garwolin
-ZiołaProwanKamis8g;zioła prowansalskie Kamis
-Łosoś atl fil kg;łosoś atlantycki filet
+﻿nazwa z kasy;nazwa czytelna;kategoria
+Banan Luz;banany;owoce i warzywa
+Brzoskwinia Luz;brzoskwinie;owoce i warzywa
+Chleb 500 g;chleb;pieczywo
+Chleb Słonecz 480g;chleb słonecznikowy;pieczywo
+CIASTKA Z CZEKOLADĄ;ciastka z czekoladą;słodycze
+CzekolArachAll100g;czekolada z orzeszkami arachidowymi;słodycze
+HerbariumMiętax30;mięta Herbarium;spiżarnia
+HerbariumPokrzywax20;pokrzywa Herbarium;spiżarnia
+HerbRemseyOwoceLeśn;herbata Owoce Leśne Remsey;spiżarnia
+Jog Naturalny 400g;jogurt naturalny;nabiał
+Kasza Grycz 4X100g;kasza gryczana;spiżarnia
+KetchupPikan560g;ketchup pikantny;spiżarnia
+KiełbKrakSucha260g;kiełbasa krakowska sucha;wędliny
+KonfJagodRapso240g;konfitura jagodowa Rapsodia;słodycze
+MakPełnoFusPas500g;makaron pełnoziarnisty fusilli Pastani;spiżarnia
+MakŚwidDobrusia1kg;makaron świderki Dobrusia;spiżarnia
+MLEKO POLSK3,2 1l;mleko 3,2% Mlekowita;nabiał
+MlekoŚw3,2 1l;mleko 3,2% Mleczna Dolina;nabiał
+MuslOwocVitanella1kg;musli owocowe Vitanella;spiżarnia
+MąkaPełnozŻytnia1kg;mąka żytnia pełnoziarnista;spiżarnia
+OlejRzepWielkop 1l;olej rzepakowy Wielkopolski;spiżarnia
+PestoZieloneSK190g;pesto zielone Gusto Bello;spiżarnia
+Pomarańcze Des Luz;pomarańcze deserowe;owoce i warzywa
+Pomid gał luz;pomidory gałązka;owoce i warzywa
+PrzyprCurrKami20 g;przyprawa curry Kamis;spiżarnia
+RogalCroissant 60g;rogal croissant;słodycze
+RogalŚwiętom 200g;rogal świętomarciński;słodycze
+SerGoudaŚwiat 150g;ser gouda Światowid;nabiał
+SerGoudaŚwiat 300g;ser gouda Światowid;nabiał
+SerMorskiŚwi  500g;ser morski Światowid;nabiał
+SezamkiBonitki;sezamki Bonitki;słodycze
+TrioWarzMroKra750g;mrożone trio warzyw;owoce i warzywa
+TwarGarwoMix;twaróg Garwolin;nabiał
+ZiołaProwanKamis8g;zioła prowansalskie Kamis;spiżarnia
+Łosoś atl fil kg;łosoś atlantycki filet;ryby

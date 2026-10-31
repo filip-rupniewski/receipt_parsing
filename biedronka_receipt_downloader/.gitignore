@@ -10,3 +10,5 @@ discovery/
 .venv/
 # Pojedyncze paragony pobrane ręcznie
 paragon_*.json
+# Raport generowany z danych osobowych (analyze_spending.py)
+analiza_wydatkow.md
