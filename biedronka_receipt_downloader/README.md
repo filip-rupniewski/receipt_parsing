@@ -13,7 +13,7 @@ z pola `data` podpisany dokument JPK_KASA_PARAGON i zapisuje do
 - `all_receipts.json`: wszystkie paragony,
 - `all_items.json`: płaska lista wszystkich pozycji z datą i numerem paragonu,
 - `biedronka_receipts.csv`: CSV (`;`, przecinek dziesiętny) z kolumnami
-  `data; nazwa; procent/sztuk/kg; cena; za kg/l/sztukę; sklep; W tym rabat` oraz
+  `data; nazwa; procent/sztuk/kg; cena; za kg/l/sztukę; sklep; W tym rabat; rabat w %` oraz
   danymi z paragonu (jednostka, godzina, adres sklepu, kasa, kasjer, nr paragonu,
   płatność, ...). Wielkość opakowania (kg/l) jest brana z nazwy produktu
   (np. `400g`, `1l`, `4X100g`); produkty ważone mają kg z kasy, pozostałe sztuki.
@@ -52,3 +52,11 @@ API panelu (odczytane z ruchu sieciowego):
 - `POST /panel/ajax/paragons` (form: `page`, `begin_data`, `end_data`, `order`, `short=0`; `short=1` pomija część paragonów)
   → `{"Receipts": [...], "NumberOfPages": n}`
 - `GET /panel/download/json/{Id}` → plik e-paragonu
+
+## Wielkości opakowań
+
+`biedronka_package_sizes.csv` zawiera produkty, dla których nie udało się odczytać
+wielkości z nazwy. Wpisz wielkość jednej sztuki i jednostkę (`kg`, `g`, `l`, `ml` albo
+`szt`, np. `30;szt` dla herbaty w saszetkach), a potem uruchom `uv run export_csv.py`.
+Nowe produkty są dopisywane automatycznie, a wpisane wartości zostają.
+Można tu też dopisać dowolny produkt, żeby nadpisać wielkość odczytaną z nazwy.

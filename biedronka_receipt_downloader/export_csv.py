@@ -9,13 +9,15 @@ Kolumny główne:
     data, nazwa,
     procent/sztuk/kg   - ilość w jednostce z kolumny "jednostka":
                          produkty ważone -> kg z kasy,
+                         wielkość z biedronka_package_sizes.csv (jeśli wpisana),
                          produkty z wagą/objętością w nazwie (np. "Jogurt 400g") ->
                          sztuki * rozmiar (kg lub l),
                          pozostałe -> liczba sztuk,
     cena               - zapłacona kwota za pozycję (po rabacie),
     za kg/l/sztukę     - cena / procent/sztuk/kg,
     sklep,
-    W tym rabat        - kwota rabatu zawarta w cenie (zł).
+    W tym rabat        - kwota rabatu zawarta w cenie (zł),
+    rabat w %          - rabat / cena przed rabatem * 100.
 Dalej kolumny z informacjami z paragonu (godzina, adres sklepu, kasa, ...).
 
 Użycie:
@@ -34,9 +36,13 @@ BASE_DIR = Path(__file__).resolve().parent
 PARSED_DIR = BASE_DIR / "biedronka_receipts_parsed"
 INPUT_FILE = PARSED_DIR / "all_receipts.json"
 OUTPUT_FILE = PARSED_DIR / "biedronka_receipts.csv"
+# ręcznie uzupełniane wielkości opakowań (w repo, nie w .gitignore)
+SIZES_FILE = BASE_DIR / "biedronka_package_sizes.csv"
+SIZES_HEADER = ["nazwa", "wielkość opakowania", "jednostka", "przykładowa data", "przykładowa cena"]
 
 HEADER = [
     "data", "nazwa", "procent/sztuk/kg", "cena", "za kg/l/sztukę", "sklep", "W tym rabat",
+    "rabat w %",
     # informacje dodatkowe
     "jednostka", "ilość z kasy", "cena jednostkowa z kasy", "cena przed rabatem",
     "stawka VAT", "godzina", "nr sklepu", "adres", "kod pocztowy", "miasto",
@@ -48,7 +54,8 @@ HEADER = [
 SIZE_RE = re.compile(
     r"(?:(\d+)\s*x\s*)?(\d+(?:[.,]\d+)?)\s*(kg|g|ml|l)(?![a-ząćęłńóśźż])", re.IGNORECASE
 )
-UNIT_FACTORS = {"kg": ("kg", 1.0), "g": ("kg", 0.001), "l": ("l", 1.0), "ml": ("l", 0.001)}
+UNIT_FACTORS = {"kg": ("kg", 1.0), "g": ("kg", 0.001), "l": ("l", 1.0), "ml": ("l", 0.001),
+                "szt": ("szt", 1.0)}
 
 
 def size_from_name(name: str) -> tuple[float, str] | None:
@@ -62,13 +69,71 @@ def size_from_name(name: str) -> tuple[float, str] | None:
     return (size, base_unit) if size > 0 else None
 
 
-def amount_and_unit(item: dict) -> tuple[float, str]:
+def load_manual_sizes() -> dict[str, tuple[float, str] | None]:
+    """Wszystkie nazwy z pliku wielkości; wartość None, gdy wielkość nie jest wpisana."""
+    sizes: dict[str, tuple[float, str] | None] = {}
+    if not SIZES_FILE.exists():
+        return sizes
+    with SIZES_FILE.open(encoding="utf-8-sig", newline="") as f:
+        for row in csv.DictReader(f, delimiter=";"):
+            name = (row.get("nazwa") or "").strip()
+            if not name:
+                continue
+            value = (row.get("wielkość opakowania") or "").strip().replace(",", ".")
+            unit = (row.get("jednostka") or "").strip().lower()
+            sizes[name] = None
+            if not value:
+                continue
+            if unit not in UNIT_FACTORS:
+                print(f"  {SIZES_FILE.name}: '{name}' - nieznana jednostka '{unit}' "
+                      f"(dozwolone: {', '.join(UNIT_FACTORS)})")
+                continue
+            try:
+                size = float(value)
+            except ValueError:
+                print(f"  {SIZES_FILE.name}: '{name}' - niepoprawna wielkość '{value}'")
+                continue
+            base_unit, factor = UNIT_FACTORS[unit]
+            sizes[name] = (size * factor, base_unit)
+    return sizes
+
+
+def amount_and_unit(item: dict, manual: dict) -> tuple[float, str]:
     if item["is_weighted"]:
         return item["quantity"], "kg"
-    size = size_from_name(item["name"])
+    size = manual.get(item["name"]) or size_from_name(item["name"])
     if size:
         return item["quantity"] * size[0], size[1]
     return item["quantity"], "szt"
+
+
+def update_sizes_file(receipts: list[dict], manual: dict) -> int:
+    """Dopisuje do pliku wielkości produkty, dla których nie znaleziono wielkości.
+    Istniejące wiersze (także wypełnione ręcznie) zostają bez zmian."""
+    rows: dict[str, list[str]] = {}
+    if SIZES_FILE.exists():
+        with SIZES_FILE.open(encoding="utf-8-sig", newline="") as f:
+            reader = csv.reader(f, delimiter=";")
+            next(reader, None)
+            for row in reader:
+                if row and row[0].strip():
+                    rows[row[0].strip()] = row
+    for r in receipts:
+        for item in r["items"]:
+            name = item["name"]
+            if (name in rows or item["is_weighted"] or size_from_name(name)):
+                continue
+            date = datetime.fromisoformat(r["datetime"]).strftime("%d.%m.%Y")
+            unit_price = item["price_before_discount"] / item["quantity"]
+            rows[name] = [name, "", "", date, num(unit_price)]
+    tmp = SIZES_FILE.with_suffix(".csv.part")
+    with tmp.open("w", newline="", encoding="utf-8-sig") as f:
+        writer = csv.writer(f, delimiter=";")
+        writer.writerow(SIZES_HEADER)
+        for name in sorted(rows, key=str.lower):
+            writer.writerow(rows[name])
+    tmp.replace(SIZES_FILE)
+    return sum(1 for name in rows if not rows[name][1].strip())
 
 
 def num(value: float | None, decimals: int = 2) -> str:
@@ -83,12 +148,14 @@ def payments_text(receipt: dict) -> str:
     return ", ".join(parts)
 
 
-def rows(receipts: list[dict]):
+def rows(receipts: list[dict], manual: dict):
     for r in receipts:
         when = datetime.fromisoformat(r["datetime"])
         store = r["store"]
         for item in r["items"]:
-            amount, unit = amount_and_unit(item)
+            amount, unit = amount_and_unit(item, manual)
+            before = item["price_before_discount"]
+            discount_pct = item["discount"] / before * 100 if item["discount"] and before else None
             per_unit = item["price"] / amount if amount else None
             yield [
                 when.strftime("%d.%m.%Y"),
@@ -98,6 +165,7 @@ def rows(receipts: list[dict]):
                 num(per_unit),
                 r["shop"],
                 num(item["discount"]) if item["discount"] else "",
+                f"{num(discount_pct, 1)}%" if discount_pct else "",
                 unit,
                 num(item["quantity"], 3),
                 num(item["unit_price"]),
@@ -124,17 +192,21 @@ def rows(receipts: list[dict]):
 
 def main() -> None:
     receipts = json.loads(INPUT_FILE.read_text(encoding="utf-8"))
+    manual = load_manual_sizes()
     tmp = OUTPUT_FILE.with_suffix(".csv.part")
     n = 0
     # utf-8-sig, żeby Excel/LibreOffice poprawnie pokazały polskie znaki
     with tmp.open("w", newline="", encoding="utf-8-sig") as f:
         writer = csv.writer(f, delimiter=";")
         writer.writerow(HEADER)
-        for row in rows(receipts):
+        for row in rows(receipts, manual):
             writer.writerow(row)
             n += 1
     tmp.replace(OUTPUT_FILE)
     print(f"Zapisano {n} pozycji -> {OUTPUT_FILE.relative_to(BASE_DIR)}")
+    missing = update_sizes_file(receipts, manual)
+    if missing:
+        print(f"Produkty bez wielkości opakowania: {missing} - uzupełnij {SIZES_FILE.name}")
 
 
 if __name__ == "__main__":
