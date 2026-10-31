@@ -10,6 +10,7 @@ Wynik:
     biedronka_receipts_parsed/paragon_<Id>.json   - jeden paragon
     biedronka_receipts_parsed/all_receipts.json   - wszystkie paragony (lista, wg daty)
     biedronka_receipts_parsed/all_items.json      - wszystkie pozycje (płaska lista)
+    biedronka_receipts_parsed/biedronka_receipts.csv - CSV (patrz export_csv.py)
 
 Użycie:
     uv run convert_receipts.py
@@ -192,6 +193,9 @@ def main() -> None:
     write_json(OUTPUT_DIR / "all_items.json", all_items)
     print(f"Skonwertowano {len(receipts)} paragonów ({len(all_items)} pozycji) "
           f"-> {OUTPUT_DIR.name}/")
+
+    import export_csv
+    export_csv.main()
 
 
 if __name__ == "__main__":

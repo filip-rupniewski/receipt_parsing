@@ -11,7 +11,13 @@ z pola `data` podpisany dokument JPK_KASA_PARAGON i zapisuje do
 
 - `paragon_<Id>.json`: jeden paragon (data, sklep, sumy, VAT, płatności, pozycje),
 - `all_receipts.json`: wszystkie paragony,
-- `all_items.json`: płaska lista wszystkich pozycji z datą i numerem paragonu.
+- `all_items.json`: płaska lista wszystkich pozycji z datą i numerem paragonu,
+- `biedronka_receipts.csv`: CSV (`;`, przecinek dziesiętny) z kolumnami
+  `data; nazwa; procent/sztuk/kg; cena; za kg/l/sztukę; sklep; W tym rabat` oraz
+  danymi z paragonu (jednostka, godzina, adres sklepu, kasa, kasjer, nr paragonu,
+  płatność, ...). Wielkość opakowania (kg/l) jest brana z nazwy produktu
+  (np. `400g`, `1l`, `4X100g`); produkty ważone mają kg z kasy, pozostałe sztuki.
+  Osobno: `uv run export_csv.py`.
 
 Kwoty są w złotych. Pozycja ma pola `name`, `quantity`, `is_weighted`, `unit_price`,
 `price_before_discount`, `discount`, `price` (po rabacie), `vat_id`, `vat_rate`.
