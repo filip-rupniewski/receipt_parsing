@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(**/credentials.json)",
+      "Edit(**/credentials.json)",
+      "Read(**/.browser_profile/**)",
+      "Bash(cat:*credentials.json*)",
+      "Bash(head:*credentials.json*)",
+      "Bash(tail:*credentials.json*)",
+      "Bash(less:*credentials.json*)",
+      "Bash(grep:*credentials.json*)"
+    ]
+  }
+}

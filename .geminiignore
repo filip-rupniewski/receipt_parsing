@@ -54,3 +54,8 @@ output_data/
 #preprocessed_images
 preprocessed_images/
 test_image_processing_migros/
+
+#credentials (dane logowania)
+credentials.json
+**/credentials.json
+.browser_profile/

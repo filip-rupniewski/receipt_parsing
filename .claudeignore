@@ -1,0 +1,4 @@
+# Dane logowania - nie czytać
+credentials.json
+**/credentials.json
+.browser_profile/

@@ -1,0 +1,11 @@
+# Dane logowania - NIE commitować
+credentials.json
+# Profil przeglądarki (ciasteczka sesji)
+.browser_profile/
+# Pobrane paragony (dane osobowe)
+biedronka_receipts_jsons/
+# Zrzuty z trybu --discover
+discovery/
+.venv/
+# Pojedyncze paragony pobrane ręcznie
+paragon_*.json
