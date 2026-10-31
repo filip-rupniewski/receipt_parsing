@@ -6,7 +6,8 @@ data dd.mm.rrrr):
     biedronka_receipts_parsed/biedronka_receipts.csv
 
 Kolumny główne:
-    data, nazwa,
+    data,
+    nazwa              - czytelna nazwa z biedronka_product_names.csv (lub nazwa z kasy),
     procent/sztuk/kg   - ilość w jednostce z kolumny "jednostka":
                          produkty ważone -> kg z kasy,
                          wielkość z biedronka_package_sizes.csv (jeśli wpisana),
@@ -39,12 +40,15 @@ OUTPUT_FILE = PARSED_DIR / "biedronka_receipts.csv"
 # ręcznie uzupełniane wielkości opakowań (w repo, nie w .gitignore)
 SIZES_FILE = BASE_DIR / "biedronka_package_sizes.csv"
 SIZES_HEADER = ["nazwa", "wielkość opakowania", "jednostka", "przykładowa data", "przykładowa cena"]
+# ręcznie uzupełniane czytelne nazwy produktów (w repo)
+NAMES_FILE = BASE_DIR / "biedronka_product_names.csv"
+NAMES_HEADER = ["nazwa z kasy", "nazwa czytelna"]
 
 HEADER = [
     "data", "nazwa", "procent/sztuk/kg", "cena", "za kg/l/sztukę", "sklep", "W tym rabat",
     "rabat w %",
     # informacje dodatkowe
-    "jednostka", "ilość z kasy", "cena jednostkowa z kasy", "cena przed rabatem",
+    "nazwa z kasy", "jednostka", "ilość z kasy", "cena jednostkowa z kasy", "cena przed rabatem",
     "stawka VAT", "godzina", "nr sklepu", "adres", "kod pocztowy", "miasto",
     "nr kasy", "kasjer", "nr paragonu", "id paragonu", "pozycja na paragonie",
     "suma paragonu", "rabat na paragonie", "płatność", "sprzedawca", "NIP",
@@ -107,6 +111,35 @@ def amount_and_unit(item: dict, manual: dict) -> tuple[float, str]:
     return item["quantity"], "szt"
 
 
+def read_names_file() -> dict[str, str]:
+    """{nazwa z kasy: nazwa czytelna} - czytelna może być pusta."""
+    names: dict[str, str] = {}
+    if NAMES_FILE.exists():
+        with NAMES_FILE.open(encoding="utf-8-sig", newline="") as f:
+            reader = csv.reader(f, delimiter=";")
+            next(reader, None)
+            for row in reader:
+                if row and row[0].strip():
+                    names[row[0].strip()] = row[1].strip() if len(row) > 1 else ""
+    return names
+
+
+def update_names_file(receipts: list[dict], names: dict[str, str]) -> int:
+    """Dopisuje nowe nazwy z kasy (z pustą nazwą czytelną); wpisane zostają bez zmian."""
+    names = dict(names)
+    for r in receipts:
+        for item in r["items"]:
+            names.setdefault(item["name"], "")
+    tmp = NAMES_FILE.with_suffix(".csv.part")
+    with tmp.open("w", newline="", encoding="utf-8-sig") as f:
+        writer = csv.writer(f, delimiter=";")
+        writer.writerow(NAMES_HEADER)
+        for raw in sorted(names, key=str.lower):
+            writer.writerow([raw, names[raw]])
+    tmp.replace(NAMES_FILE)
+    return sum(1 for v in names.values() if not v)
+
+
 def update_sizes_file(receipts: list[dict], manual: dict) -> int:
     """Dopisuje do pliku wielkości produkty, dla których nie znaleziono wielkości.
     Istniejące wiersze (także wypełnione ręcznie) zostają bez zmian."""
@@ -148,7 +181,7 @@ def payments_text(receipt: dict) -> str:
     return ", ".join(parts)
 
 
-def rows(receipts: list[dict], manual: dict):
+def rows(receipts: list[dict], manual: dict, names: dict[str, str]):
     for r in receipts:
         when = datetime.fromisoformat(r["datetime"])
         store = r["store"]
@@ -159,13 +192,14 @@ def rows(receipts: list[dict], manual: dict):
             per_unit = item["price"] / amount if amount else None
             yield [
                 when.strftime("%d.%m.%Y"),
-                item["name"],
+                names.get(item["name"]) or item["name"],
                 num(amount, 3),
                 num(item["price"]),
                 num(per_unit),
                 r["shop"],
                 num(item["discount"]) if item["discount"] else "",
                 f"{num(discount_pct, 1)}%" if discount_pct else "",
+                item["name"],
                 unit,
                 num(item["quantity"], 3),
                 num(item["unit_price"]),
@@ -193,17 +227,21 @@ def rows(receipts: list[dict], manual: dict):
 def main() -> None:
     receipts = json.loads(INPUT_FILE.read_text(encoding="utf-8"))
     manual = load_manual_sizes()
+    names = read_names_file()
     tmp = OUTPUT_FILE.with_suffix(".csv.part")
     n = 0
     # utf-8-sig, żeby Excel/LibreOffice poprawnie pokazały polskie znaki
     with tmp.open("w", newline="", encoding="utf-8-sig") as f:
         writer = csv.writer(f, delimiter=";")
         writer.writerow(HEADER)
-        for row in rows(receipts, manual):
+        for row in rows(receipts, manual, names):
             writer.writerow(row)
             n += 1
     tmp.replace(OUTPUT_FILE)
     print(f"Zapisano {n} pozycji -> {OUTPUT_FILE.relative_to(BASE_DIR)}")
+    untranslated = update_names_file(receipts, names)
+    if untranslated:
+        print(f"Produkty bez czytelnej nazwy: {untranslated} - uzupełnij {NAMES_FILE.name}")
     missing = update_sizes_file(receipts, manual)
     if missing:
         print(f"Produkty bez wielkości opakowania: {missing} - uzupełnij {SIZES_FILE.name}")

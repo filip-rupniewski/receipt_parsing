@@ -60,3 +60,11 @@ wielkości z nazwy. Wpisz wielkość jednej sztuki i jednostkę (`kg`, `g`, `l`,
 `szt`, np. `30;szt` dla herbaty w saszetkach), a potem uruchom `uv run export_csv.py`.
 Nowe produkty są dopisywane automatycznie, a wpisane wartości zostają.
 Można tu też dopisać dowolny produkt, żeby nadpisać wielkość odczytaną z nazwy.
+
+## Czytelne nazwy produktów
+
+`biedronka_product_names.csv` (`nazwa z kasy;nazwa czytelna`) tłumaczy skrócone nazwy
+z kasy, np. `HerbRemseyOwoceLeśn` → `herbata Owoce Leśne Remsey`. W CSV kolumna
+`nazwa` ma nazwę czytelną (lub nazwę z kasy, jeśli czytelna jest pusta), a oryginał
+jest w kolumnie `nazwa z kasy`. Nowe produkty dopisują się automatycznie z pustą
+nazwą czytelną. Plik wielkości opakowań nadal używa nazw z kasy.
