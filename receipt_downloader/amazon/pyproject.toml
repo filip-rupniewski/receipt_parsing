@@ -1,0 +1,11 @@
+[project]
+name = "amazon-purchases-downloader"
+version = "0.1.0"
+description = "Pobiera listę zakupów z Amazona (Twoje zamówienia)"
+requires-python = ">=3.12"
+dependencies = [
+    "playwright>=1.48",
+    "keyring>=25",
+    "matplotlib>=3.11.2",
+    "beautifulsoup4>=4.12",
+]

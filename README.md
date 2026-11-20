@@ -165,8 +165,8 @@ GitHub. Ich historia jest zapisywana w osobnym, lokalnym repozytorium `.git-priv
 w katalogu głównym projektu. To repozytorium nie ma remote. Śledzi tylko katalogi
 z danymi wymienione w `zapisz_dane_prywatne.sh`: `paragony/`, `paragony stare/`,
 `archives/`, `denner/`, `lidl/`, `lidl_wyrazne/`, `migros/`, `output_data/`, pobrane
-paragony Biedronki i `receipt_downloader/allegro/dane/`. Nigdy nie zapisuje haseł
-(`credentials.json`), sesji przeglądarek ani cache.
+paragony Biedronki, `receipt_downloader/allegro/dane/` i `receipt_downloader/amazon/dane/`.
+Nigdy nie zapisuje haseł (`credentials.json`), sesji przeglądarek ani cache.
 
 ```
 ./zapisz_dane_prywatne.sh "opis zmian"   # zapisz bieżący stan danych
