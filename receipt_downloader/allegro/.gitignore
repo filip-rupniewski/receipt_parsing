@@ -1,0 +1,8 @@
+# Profil przeglądarki (ciasteczka sesji Allegro)
+.browser_profile/
+# Pobrane dane (dane osobowe)
+allegro_raw/
+allegro_purchases/
+# Zrzuty z trybu --discover
+discovery/
+.venv/

@@ -1,0 +1,9 @@
+[project]
+name = "allegro-purchases-downloader"
+version = "0.1.0"
+description = "Pobiera listę zakupów z allegro.pl (Moje Allegro -> Kupione)"
+requires-python = ">=3.12"
+dependencies = [
+    "playwright>=1.48",
+    "keyring>=25",
+]
