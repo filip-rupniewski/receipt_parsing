@@ -32,14 +32,11 @@ from __future__ import annotations
 
 import argparse
 import csv
-import getpass
 import hashlib
 import json
 import re
-import subprocess
 import sys
 import time
-import urllib.request
 from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import urlparse
@@ -48,7 +45,7 @@ from playwright.sync_api import BrowserContext, Page, Response, sync_playwright
 
 BASE_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(BASE_DIR.parent))
-import common  # noqa: E402  (../common.py: zakupy.csv, wykres, NBP, .git-private)
+import common  # noqa: E402  (../common.py: logowanie, przeglądarka, zakupy.csv, wykres, NBP)
 PROFILE_DIR = BASE_DIR / ".browser_profile"
 # Dane osobowe trzymamy w ./dane: ignoruje je repozytorium z kodem, a ich historia
 # jest w prywatnym, lokalnym repo .git-private w katalogu projektu. Patrz commit_data().
@@ -60,76 +57,7 @@ DISCOVERY_DIR = BASE_DIR / "discovery"
 PURCHASES_URL = "https://allegro.pl/moje-allegro/zakupy/kupione"
 LOGIN_TIMEOUT_S = 300  # czas na ręczne dokończenie logowania (captcha, 2FA)
 
-KEYRING_SERVICE = "receipt_parsing-allegro"
-KEYRING_USER_KEY = "__login__"  # pod tym kluczem trzymamy sam login
-
-
-# --------------------------------------------------------------------------- #
-# Dane logowania
-# --------------------------------------------------------------------------- #
-def _keyring():
-    try:
-        import keyring
-        from keyring.backends import fail
-    except ImportError:
-        return None
-    if isinstance(keyring.get_keyring(), fail.Keyring):
-        return None  # brak działającego pęku kluczy w systemie
-    return keyring
-
-
-def save_credentials() -> None:
-    kr = _keyring()
-    if kr is None:
-        sys.exit("Brak systemowego pęku kluczy (Secret Service). "
-                 "Użyj --ask albo --manual-login.")
-    login = input("Login Allegro (e-mail lub nazwa użytkownika): ").strip()
-    password = getpass.getpass("Hasło Allegro: ")
-    if not login or not password:
-        sys.exit("Login i hasło nie mogą być puste.")
-    kr.set_password(KEYRING_SERVICE, KEYRING_USER_KEY, login)
-    kr.set_password(KEYRING_SERVICE, login, password)
-    print(f"Zapisano w pęku kluczy (usługa '{KEYRING_SERVICE}').")
-
-
-def forget_credentials() -> None:
-    kr = _keyring()
-    if kr is None:
-        sys.exit("Brak systemowego pęku kluczy.")
-    login = kr.get_password(KEYRING_SERVICE, KEYRING_USER_KEY)
-    for key in filter(None, (login, KEYRING_USER_KEY)):
-        try:
-            kr.delete_password(KEYRING_SERVICE, key)
-        except Exception:
-            pass
-    print("Usunięto dane logowania z pęku kluczy.")
-
-
-class LazyCredentials:
-    """Pobiera dane dopiero wtedy, gdy są potrzebne (sesja wygasła)."""
-
-    def __init__(self, ask: bool):
-        self.ask = ask
-        self._value: tuple[str, str] | None = None
-
-    def get(self) -> tuple[str, str]:
-        if self._value is None:
-            self._value = self._load()
-        return self._value
-
-    def _load(self) -> tuple[str, str]:
-        if not self.ask:
-            kr = _keyring()
-            if kr is not None:
-                login = kr.get_password(KEYRING_SERVICE, KEYRING_USER_KEY)
-                password = kr.get_password(KEYRING_SERVICE, login) if login else None
-                if login and password:
-                    print("  dane logowania: systemowy pęk kluczy")
-                    return login, password
-        print("  podaj dane logowania (nie zostaną zapisane):")
-        login = input("  Login Allegro: ").strip()
-        password = getpass.getpass("  Hasło Allegro: ")
-        return login, password
+KEYRING_SERVICE = "receipt_parsing-allegro"  # login i hasło: common.LazyCredentials
 
 
 # --------------------------------------------------------------------------- #
@@ -154,98 +82,34 @@ def is_purchases_url(url: str) -> bool:
     return u.hostname == "allegro.pl" and u.path.startswith("/moje-allegro/zakupy")
 
 
-def start_browser() -> subprocess.Popen:
-    with sync_playwright() as p:
-        exe = p.chromium.executable_path
-    if not Path(exe).exists():
-        sys.exit(f"Brak Chromium dla tej wersji Playwright ({exe}).\n"
-                 "Zainstaluj: uv run playwright install chromium")
-    PROFILE_DIR.mkdir(exist_ok=True)
-    PROFILE_DIR.chmod(0o700)  # ciasteczka sesji tylko dla właściciela
-    proc = subprocess.Popen(
-        [
-            exe,
-            f"--user-data-dir={PROFILE_DIR}",
-            f"--remote-debugging-port={CDP_PORT}",
-            "--remote-debugging-address=127.0.0.1",
-            "--no-sandbox",  # Ubuntu blokuje sandbox Chromium z Playwright
-            "--no-first-run",
-            "--no-default-browser-check",
-            "--lang=pl-PL",
-            "--window-size=1280,950",
-            PURCHASES_URL,
-        ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-    for _ in range(100):
-        if current_tab() is not None:
-            return proc
-        time.sleep(0.2)
-    proc.terminate()
-    sys.exit("Nie udało się uruchomić Chromium.")
-
-
-def current_tab() -> dict | None:
-    """Aktywna karta (url, title) przez HTTP DevTools, bez podłączania się."""
-    try:
-        with urllib.request.urlopen(f"{CDP_URL}/json/list", timeout=2) as r:
-            tabs = json.load(r)
-    except Exception:
-        return None
-    pages = [t for t in tabs if t.get("type") == "page"]
-    return pages[0] if pages else {"url": "", "title": ""}
-
-
-def _visible_field(page: Page, selectors: list[str]):
-    for sel in selectors:
-        field = page.locator(sel).first
-        if field.count() and field.is_visible():
-            return field
-    return None
-
-
 def fill_credentials(user: str, password: str) -> bool:
     """Podłącza się na chwilę, wpisuje login i hasło, sprawdza, czy wartości
-    zostały w polach, i się rozłącza. Strona logowania Allegro potrafi wyczyścić
-    pole wpisane przed pełnym załadowaniem formularza, dlatego wartości są
-    weryfikowane, a w razie potrzeby wpisywane znak po znaku."""
+    zostały w polach (common.type_checked), i się rozłącza."""
     pw = sync_playwright().start()
     try:
         browser = pw.chromium.connect_over_cdp(CDP_URL)
         page = browser.contexts[0].pages[0]
-        login_field = _visible_field(page, LOGIN_SELECTORS)
-        password_field = _visible_field(page, PASSWORD_SELECTORS)
+        login_field = common.visible_field(page, LOGIN_SELECTORS)
+        password_field = common.visible_field(page, PASSWORD_SELECTORS)
         if login_field is None or password_field is None:
             return False
         page.wait_for_timeout(1000)  # formularz musi się w pełni załadować
-        for field, value in ((login_field, user), (password_field, password)):
-            for attempt in range(3):
-                if field.input_value() == value:
-                    break
-                if attempt == 0:
-                    field.fill(value)
-                else:
-                    field.fill("")
-                    field.press_sequentially(value, delay=40)
-                page.wait_for_timeout(500)
-        page.wait_for_timeout(500)
-        return (login_field.input_value() == user
-                and password_field.input_value() == password)
+        return (common.type_checked(page, login_field, user)
+                and common.type_checked(page, password_field, password))
     except Exception:
         return False
     finally:
         pw.stop()  # rozłącza, przeglądarka działa dalej
 
 
-def login(creds: LazyCredentials | None) -> None:
+def login(creds: common.LazyCredentials | None) -> None:
     deadline = time.time() + LOGIN_TIMEOUT_S
     filled = False
     announced = False
     ok_streak = 0
     time.sleep(2)  # czas na ewentualne przekierowanie do logowania
     while time.time() < deadline:
-        tab = current_tab()
+        tab = common.current_tab(CDP_PORT)
         if tab is None:
             sys.exit("Przeglądarka została zamknięta.")
         url, title = tab.get("url", ""), tab.get("title", "")
@@ -804,15 +668,16 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.save_credentials:
-        return save_credentials()
+        return common.save_credentials(KEYRING_SERVICE, "Allegro", "e-mail lub nazwa użytkownika")
     if args.forget_credentials:
-        return forget_credentials()
+        return common.forget_credentials(KEYRING_SERVICE)
     if args.rebuild:
         rebuild_outputs()
         return commit_data(f"przebudowa plików wynikowych {time.strftime('%Y-%m-%d %H:%M')}")
 
-    creds = None if args.manual_login else LazyCredentials(ask=args.ask)
-    proc = start_browser()
+    creds = None if args.manual_login else \
+        common.LazyCredentials(KEYRING_SERVICE, "Allegro", ask=args.ask)
+    proc = common.start_browser(PROFILE_DIR, CDP_PORT, PURCHASES_URL)
     try:
         login(creds)
         with sync_playwright() as p:

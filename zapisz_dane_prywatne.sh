@@ -21,6 +21,7 @@ DANE=(
   "biedronka_receipt_downloader/analiza_wydatkow.md"
   "receipt_downloader/allegro/dane"
   "receipt_downloader/amazon/dane"
+  "receipt_downloader/aliexpress/dane"
 )
 # nigdy: hasła, sesje przeglądarek, pliki tymczasowe
 POMIN=(

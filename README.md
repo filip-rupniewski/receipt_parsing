@@ -165,7 +165,8 @@ GitHub. Ich historia jest zapisywana w osobnym, lokalnym repozytorium `.git-priv
 w katalogu głównym projektu. To repozytorium nie ma remote. Śledzi tylko katalogi
 z danymi wymienione w `zapisz_dane_prywatne.sh`: `paragony/`, `paragony stare/`,
 `archives/`, `denner/`, `lidl/`, `lidl_wyrazne/`, `migros/`, `output_data/`, pobrane
-paragony Biedronki, `receipt_downloader/allegro/dane/` i `receipt_downloader/amazon/dane/`.
+paragony Biedronki, `receipt_downloader/allegro/dane/`, `receipt_downloader/amazon/dane/`
+i `receipt_downloader/aliexpress/dane/`.
 Nigdy nie zapisuje haseł (`credentials.json`), sesji przeglądarek ani cache.
 
 ```
@@ -174,7 +175,7 @@ git --git-dir=.git-private log --stat     # historia
 git --git-dir=.git-private status         # zmiany w już śledzonych plikach
 ```
 
-Skrypt Allegro sam robi commit swoich danych po każdym pobraniu. Pozostałe dane zapisujesz
+Skrypty Allegro, Amazona i AliExpress same robią commit swoich danych po każdym pobraniu. Pozostałe dane zapisujesz
 skryptem powyżej. Nowy katalog z danymi trzeba dopisać do listy `DANE` w skrypcie.
 Repozytorium jest na tym samym dysku, więc to historia, a nie kopia zapasowa. Kopię
 zrobisz np. przez `git clone --bare .git-private /inny/dysk/receipt_dane.git`.

@@ -1,0 +1,7 @@
+# Profil przeglądarki (ciasteczka sesji AliExpress)
+.browser_profile/
+# Dane osobowe: wspólne prywatne repozytorium .git-private (bez remote), patrz README
+dane/
+# Zrzuty z trybu --discover (pełne strony z danymi osobowymi)
+discovery/
+.venv/

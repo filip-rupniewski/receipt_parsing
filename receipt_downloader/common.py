@@ -1,5 +1,7 @@
 """
-Kod wspólny dla skryptów pobierających zakupy (allegro/, amazon/):
+Kod wspólny dla skryptów pobierających zakupy (allegro/, amazon/, aliexpress/):
+  * dane logowania: systemowy pęk kluczy albo terminal,
+  * Chromium jako zwykły proces z trwałym profilem (CDP) i wpisywanie danych w pola,
   * kursy walut NBP (z cache),
   * zakupy.csv - uproszczona lista zakupów do czytania,
   * wydatki_miesiecznie.png - wykres wydatków w kolejnych miesiącach,
@@ -12,8 +14,11 @@ Skrypty importują ten moduł po dopisaniu katalogu receipt_downloader/ do sys.p
 
 from __future__ import annotations
 
+import getpass
 import json
 import subprocess
+import sys
+import time
 import urllib.request
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -41,6 +46,163 @@ def normalize_name(name: str) -> str:
 
 def quote(value: str) -> str:
     return '"' + str(value).replace('"', '""') + '"'
+
+
+# --------------------------------------------------------------------------- #
+# Dane logowania
+# --------------------------------------------------------------------------- #
+# Dane logowania NIE są trzymane w plikach projektu: albo systemowy pęk kluczy
+# (GNOME Keyring / KWallet, przez bibliotekę `keyring`), albo terminal (getpass).
+KEYRING_USER_KEY = "__login__"  # pod tym kluczem trzymamy sam login
+
+
+def _keyring():
+    try:
+        import keyring
+        from keyring.backends import fail
+    except ImportError:
+        return None
+    if isinstance(keyring.get_keyring(), fail.Keyring):
+        return None  # brak działającego pęku kluczy w systemie
+    return keyring
+
+
+def save_credentials(service: str, site: str, login_hint: str) -> None:
+    """Pyta o login i hasło i zapisuje je w pęku kluczy pod usługą `service`
+    (np. 'receipt_parsing-amazon'). `site` i `login_hint` są tylko w pytaniu:
+    „Login Amazon (e-mail lub numer telefonu): ”."""
+    kr = _keyring()
+    if kr is None:
+        sys.exit("Brak systemowego pęku kluczy (Secret Service). "
+                 "Użyj --ask albo --manual-login.")
+    login = input(f"Login {site} ({login_hint}): ").strip()
+    password = getpass.getpass(f"Hasło {site}: ")
+    if not login or not password:
+        sys.exit("Login i hasło nie mogą być puste.")
+    kr.set_password(service, KEYRING_USER_KEY, login)
+    kr.set_password(service, login, password)
+    print(f"Zapisano w pęku kluczy (usługa '{service}').")
+
+
+def forget_credentials(service: str) -> None:
+    kr = _keyring()
+    if kr is None:
+        sys.exit("Brak systemowego pęku kluczy.")
+    login = kr.get_password(service, KEYRING_USER_KEY)
+    for key in filter(None, (login, KEYRING_USER_KEY)):
+        try:
+            kr.delete_password(service, key)
+        except Exception:
+            pass
+    print("Usunięto dane logowania z pęku kluczy.")
+
+
+class LazyCredentials:
+    """Pobiera dane dopiero wtedy, gdy są potrzebne (sesja wygasła): z pęku
+    kluczy, a gdy go nie ma, jest pusty albo `ask` - z terminala."""
+
+    def __init__(self, service: str, site: str, ask: bool):
+        self.service, self.site, self.ask = service, site, ask
+        self._value: tuple[str, str] | None = None
+
+    def get(self) -> tuple[str, str]:
+        if self._value is None:
+            self._value = self._load()
+        return self._value
+
+    def _load(self) -> tuple[str, str]:
+        if not self.ask:
+            kr = _keyring()
+            if kr is not None:
+                login = kr.get_password(self.service, KEYRING_USER_KEY)
+                password = kr.get_password(self.service, login) if login else None
+                if login and password:
+                    print("  dane logowania: systemowy pęk kluczy")
+                    return login, password
+        print("  podaj dane logowania (nie zostaną zapisane):")
+        login = input(f"  Login {self.site}: ").strip()
+        password = getpass.getpass(f"  Hasło {self.site}: ")
+        return login, password
+
+
+# --------------------------------------------------------------------------- #
+# Przeglądarka
+# --------------------------------------------------------------------------- #
+# Sklepy chronią się przed botami, więc Chromium startuje jako zwykły proces
+# z trwałym profilem (ciasteczka sesji), a skrypt podłącza się do niego przez CDP
+# tylko wtedy, gdy musi. Każdy skrypt ma własny port CDP.
+def start_browser(profile_dir: Path, port: int, start_url: str) -> subprocess.Popen:
+    from playwright.sync_api import sync_playwright
+    with sync_playwright() as p:
+        exe = p.chromium.executable_path
+    if not Path(exe).exists():
+        sys.exit(f"Brak Chromium dla tej wersji Playwright ({exe}).\n"
+                 "Zainstaluj: uv run playwright install chromium")
+    profile_dir.mkdir(exist_ok=True)
+    profile_dir.chmod(0o700)  # ciasteczka sesji tylko dla właściciela
+    proc = subprocess.Popen(
+        [
+            exe,
+            f"--user-data-dir={profile_dir}",
+            f"--remote-debugging-port={port}",
+            "--remote-debugging-address=127.0.0.1",
+            "--no-sandbox",  # Ubuntu blokuje sandbox Chromium z Playwright
+            "--no-first-run",
+            "--no-default-browser-check",
+            "--lang=pl-PL",
+            "--window-size=1280,950",
+            start_url,
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    for _ in range(100):
+        if current_tab(port) is not None:
+            return proc
+        time.sleep(0.2)
+    proc.terminate()
+    sys.exit("Nie udało się uruchomić Chromium.")
+
+
+def current_tab(port: int) -> dict | None:
+    """Aktywna karta (url, title) przez HTTP DevTools, bez podłączania się.
+    None = przeglądarka nie odpowiada (zamknięta)."""
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/json/list", timeout=2) as r:
+            tabs = json.load(r)
+    except Exception:
+        return None
+    pages = [t for t in tabs if t.get("type") == "page"]
+    return pages[0] if pages else {"url": "", "title": ""}
+
+
+def visible_field(page, selectors: list[str]):
+    """Pierwsze widoczne i edytowalne pole spośród selektorów (strona albo ramka)."""
+    for sel in selectors:
+        field = page.locator(sel).first
+        try:
+            if field.count() and field.is_visible() and field.is_editable():
+                return field
+        except Exception:
+            continue
+    return None
+
+
+def type_checked(page, field, value: str) -> bool:
+    """Wpisuje wartość i sprawdza, czy została w polu. Formularz potrafi wyczyścić
+    pole wpisane przed pełnym załadowaniem, więc w razie potrzeby wpisujemy
+    jeszcze raz, znak po znaku."""
+    for attempt in range(3):
+        if field.input_value() == value:
+            break
+        if attempt == 0:
+            field.fill(value)
+        else:
+            field.fill("")
+            field.press_sequentially(value, delay=40)
+        page.wait_for_timeout(500)
+    page.wait_for_timeout(500)
+    return field.input_value() == value
 
 
 # --------------------------------------------------------------------------- #
@@ -122,12 +284,14 @@ TOP_MIN_SHARE = 0.10  # ...tylko w kolumnach >= 10% najwyższej
 LIST_MIN_PRICE = 100  # w legendzie także wszystkie pozycje droższe niż tyle zł
 
 
-def write_monthly_chart(rows: list[dict], out_path: Path, shop_name: str) -> None:
+def write_monthly_chart(rows: list[dict], out_path: Path, shop_name: str,
+                        title: str | None = None) -> None:
     """Wykres kolumnowy wydatków w kolejnych miesiącach z wierszy zakupy.csv
     (z uwzględnieniem zwrotów, bez anulowanych zamówień i dostawy). W kolumnach
     >= 10% najwyższej trzy najdroższe pozycje (cena = liczba × cena jedn.) są
     wyróżnione odcieniami niebieskiego, a ich nazwy i ceny są w legendzie pod
-    wykresem. `shop_name` trafia do tytułu: „Wydatki na <shop_name> …”."""
+    wykresem. `shop_name` trafia do tytułu: „Wydatki na <shop_name> w kolejnych
+    miesiącach”, chyba że podano własny `title`."""
     try:
         import matplotlib
         matplotlib.use("Agg")
@@ -211,7 +375,7 @@ def write_monthly_chart(rows: list[dict], out_path: Path, shop_name: str) -> Non
                                    edgecolor=surface, linewidth=1.2, zorder=2))
             bottom += p
 
-    fig.text(0.012, Y(0.18), f"Wydatki na {shop_name} w kolejnych miesiącach",
+    fig.text(0.012, Y(0.18), title or f"Wydatki na {shop_name} w kolejnych miesiącach",
              color=ink, fontsize=13, ha="left", va="top")
     fig.text(0.012, Y(0.47), f"razem {zl(total)} · średnio {zl(mean)} / miesiąc · "
              "z uwzględnieniem zwrotów, bez anulowanych zamówień i dostawy",
@@ -227,6 +391,9 @@ def write_monthly_chart(rows: list[dict], out_path: Path, shop_name: str) -> Non
               else MONTHS_PL[int(k[5:]) - 1] for i, k in enumerate(months)]
     step = 1 if len(months) <= 18 else 2
     ticks = [i for i in range(len(months)) if i % step == 0 or months[i][5:] == "01"]
+    if len(months) > 48:  # wiele lat: tylko styczeń każdego roku, podpisany rokiem
+        ticks = [i for i, k in enumerate(months) if k[5:] == "01"]
+        labels = [k[:4] for k in months]
     ax.set_xticks(ticks)
     ax.set_xticklabels([labels[i] for i in ticks], color=ink2, fontsize=8.5)
     ax.yaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: zl(v)))
