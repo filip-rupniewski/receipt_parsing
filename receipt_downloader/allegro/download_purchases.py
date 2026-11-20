@@ -721,7 +721,8 @@ def pln_rate(currency: str, day: datetime, cache: dict) -> float | None:
 
 def write_simple_csv(kept: list[dict]) -> None:
     """zakupy.csv - wersja do czytania: numer zakupu (1 = najstarszy), data,
-    produkt, ilość, ceny w PLN. Bez anulowanych i zwróconych pozycji."""
+    produkt, liczba, cena (razem) i cena jednostkowa w PLN, sklep. Najnowsze
+    zakupy na górze. Bez anulowanych i zwróconych pozycji."""
     cache = json.loads(NBP_CACHE.read_text()) if NBP_CACHE.exists() else {}
     n_cache = len(cache)
     rows = sorted(kept, key=lambda r: (str(r["date"]), r["order_id"]))
@@ -737,15 +738,17 @@ def write_simple_csv(kept: list[dict]) -> None:
             "nr": nr,
             "data": local.date().isoformat() if local else "",
             "produkt": r["title"],
-            "ilość": r["quantity"],
-            "cena_pln": f"{unit:.2f}" if unit is not None else "",
-            "razem_pln": f"{unit * int(r['quantity']):.2f}" if unit is not None else "",
+            "liczba": r["quantity"],
+            "cena": f"{unit * int(r['quantity']):.2f}" if unit is not None else "",
+            "cena jednostkowa": f"{unit:.2f}" if unit is not None else "",
+            "sklep": "allegro",
         })
+    out.reverse()  # najnowszy zakup na górze (numeracja nadal od najstarszego)
     if len(cache) != n_cache:
         NBP_CACHE.write_text(json.dumps(cache, indent=1))
     with open(OUTPUT_DIR / "zakupy.csv", "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=["nr", "data", "produkt", "ilość",
-                                          "cena_pln", "razem_pln"])
+        w = csv.DictWriter(f, fieldnames=["nr", "data", "produkt", "liczba", "cena",
+                                          "cena jednostkowa", "sklep"])
         w.writeheader()
         w.writerows(out)
 

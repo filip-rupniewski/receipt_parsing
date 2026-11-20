@@ -55,8 +55,9 @@ Pozycja zwrócona częściowo zostaje z pomniejszoną ilością. Kolumny: `order
 `currency`, `url`. Koszt dostawy nie jest wliczony.
 
 `allegro_purchases/zakupy.csv` to uproszczona wersja `items_kept.csv` do czytania.
-Ma kolumny `nr`, `data`, `produkt`, `ilość`, `cena_pln`, `razem_pln`, a wiersze są
-posortowane od najstarszego zakupu. `nr` to numer zakupu: 1 to najstarszy, a numery
+Ma kolumny `nr`, `data`, `produkt`, `liczba`, `cena` (= liczba × cena jednostkowa),
+`cena jednostkowa` i `sklep` (zawsze `allegro`). Kwoty są w PLN, a najnowszy zakup jest
+na górze. `nr` to numer zakupu: 1 to najstarszy, a numery
 idą kolejno bez luk. Pozycje z jednego zamówienia mają ten sam numer. Numery są liczone
 tylko z zachowanych zakupów, więc mogą się przesunąć, jeśli później zwrócisz całe
 zamówienie. Data jest w czasie polskim. Kwoty w innych walutach są przeliczane na PLN
