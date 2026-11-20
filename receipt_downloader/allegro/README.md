@@ -48,7 +48,13 @@ mu działać z sandboxem.
 `order_total`, `offer_id`, `title`, `quantity`, `unit_price`, `currency`,
 `delivery_name`, `delivery_cost`, `url`. Pełne dane zamówień są w `orders.json`.
 
-`uv run download_purchases.py --rebuild` odtwarza oba pliki z `allegro_raw/` bez
+`allegro_purchases/items_kept.csv` zawiera tylko to, co zostało u Ciebie. Pomija
+anulowane zamówienia i zwrócone sztuki, także zwroty jeszcze w trakcie weryfikacji.
+Pozycja zwrócona częściowo zostaje z pomniejszoną ilością. Kolumny: `order_id`, `date`,
+`seller`, `offer_id`, `title`, `quantity`, `unit_price`, `total` (= ilość × cena),
+`currency`, `url`. Koszt dostawy nie jest wliczony.
+
+`uv run download_purchases.py --rebuild` odtwarza pliki wynikowe z `allegro_raw/` bez
 logowania, np. po zmianie kolumn.
 
 ## Jak działa pobieranie

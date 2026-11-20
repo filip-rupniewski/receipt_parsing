@@ -671,6 +671,31 @@ def save_raw(bodies: list[dict]) -> None:
         json.dumps(bodies, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+KEPT_FIELDS = ["order_id", "date", "seller", "offer_id", "title", "quantity",
+               "unit_price", "total", "currency", "url"]
+
+
+def kept_items(rows: list[dict]) -> list[dict]:
+    """Pozycje, które zostały u kupującego: bez anulowanych zamówień i bez
+    zwróconych sztuk (zwrot zgłoszony, także w trakcie weryfikacji). Pozycja
+    zwrócona częściowo zostaje z pomniejszoną ilością."""
+    out = []
+    for r in rows:
+        if r["order_status"] == "ORDER_CANCELLED":
+            continue
+        qty = int(r["quantity"] or 0)
+        returned = int(r.get("returned_quantity") or r.get("refunded_quantity") or 0)
+        if r.get("refund_amount") and not returned:
+            returned = qty  # zwrot samej kwoty bez liczby sztuk: produkt odesłany
+        kept_qty = qty - returned
+        if kept_qty <= 0:
+            continue
+        unit = float(r["unit_price"] or 0)
+        out.append({k: r.get(k) for k in KEPT_FIELDS}
+                   | {"quantity": kept_qty, "total": f"{unit * kept_qty:.2f}"})
+    return out
+
+
 def rebuild_outputs() -> list[dict]:
     OUTPUT_DIR.mkdir(exist_ok=True)
     # łączymy z poprzednimi pobraniami (Allegro pokazuje tylko ostatnie zakupy
@@ -693,9 +718,14 @@ def rebuild_outputs() -> list[dict]:
         w = csv.DictWriter(f, fieldnames=fields)
         w.writeheader()
         w.writerows(rows)
+    kept = kept_items(rows)
+    with open(OUTPUT_DIR / "items_kept.csv", "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=KEPT_FIELDS)
+        w.writeheader()
+        w.writerows(kept)
     n_ret = sum(1 for r in rows if r.get("returned_quantity") or r.get("refunded_quantity"))
-    print(f"Zamówień: {len(orders)}, pozycji: {len(rows)} (zwróconych: {n_ret}) "
-          f"-> {OUTPUT_DIR}/")
+    print(f"Zamówień: {len(orders)}, pozycji: {len(rows)} (zwróconych: {n_ret}), "
+          f"zatrzymanych pozycji: {len(kept)} -> {OUTPUT_DIR}/")
     return orders
     if not orders:
         print("Nie rozpoznano żadnych zamówień. Uruchom z --discover i sprawdź "
