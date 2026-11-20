@@ -13,6 +13,10 @@ moja.biedronka.pl ──download_receipts.py──▶ biedronka_receipts_jsons/ 
 Wystarczy uruchomić `download_receipts.py`: po pobraniu nowych paragonów pozostałe kroki
 uruchamiają się automatycznie. Każdy krok można też uruchomić osobno.
 
+Pobrane paragony (`biedronka_receipts_jsons/`, `biedronka_receipts_parsed/`) i
+`analiza_wydatkow.md` nie trafiają na GitHub. Ich historię zapisuje
+`../zapisz_dane_prywatne.sh` w prywatnym repozytorium `.git-private` (opis w głównym README).
+
 ## Pierwsza konfiguracja
 
 ```

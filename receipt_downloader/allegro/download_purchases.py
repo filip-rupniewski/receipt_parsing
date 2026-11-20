@@ -49,8 +49,11 @@ from playwright.sync_api import BrowserContext, Page, Response, sync_playwright
 
 BASE_DIR = Path(__file__).resolve().parent
 PROFILE_DIR = BASE_DIR / ".browser_profile"
-RAW_DIR = BASE_DIR / "allegro_raw"          # surowe odpowiedzi JSON ze strony „Kupione”
-OUTPUT_DIR = BASE_DIR / "allegro_purchases"  # wynik: zamówienia i pozycje
+# Dane osobowe trzymamy w ./dane: ignoruje je repozytorium z kodem, a ich historia
+# jest w prywatnym, lokalnym repo .git-private w katalogu projektu. Patrz commit_data().
+DATA_DIR = BASE_DIR / "dane"
+RAW_DIR = DATA_DIR / "allegro_raw"          # surowe odpowiedzi JSON ze strony „Kupione”
+OUTPUT_DIR = DATA_DIR / "allegro_purchases"  # wynik: zamówienia i pozycje
 DISCOVERY_DIR = BASE_DIR / "discovery"
 
 PURCHASES_URL = "https://allegro.pl/moje-allegro/zakupy/kupione"
@@ -665,8 +668,7 @@ def flatten(orders: list[dict]) -> list[dict]:
 
 
 def save_raw(bodies: list[dict]) -> None:
-    RAW_DIR.mkdir(exist_ok=True)
-    OUTPUT_DIR.mkdir(exist_ok=True)
+    RAW_DIR.mkdir(parents=True, exist_ok=True)
     stamp = time.strftime("%Y%m%d_%H%M%S")
     (RAW_DIR / f"responses_{stamp}.json").write_text(
         json.dumps(bodies, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -737,7 +739,7 @@ def write_simple_csv(kept: list[dict]) -> None:
         out.append({
             "nr": nr,
             "data": local.date().isoformat() if local else "",
-            "produkt": r["title"],
+            "produkt": normalize_name(r["title"]),
             "liczba": r["quantity"],
             "cena": f"{unit * int(r['quantity']):.2f}" if unit is not None else "",
             "cena jednostkowa": f"{unit:.2f}" if unit is not None else "",
@@ -746,15 +748,27 @@ def write_simple_csv(kept: list[dict]) -> None:
     out.reverse()  # najnowszy zakup na górze (numeracja nadal od najstarszego)
     if len(cache) != n_cache:
         NBP_CACHE.write_text(json.dumps(cache, indent=1))
+    # Nazwa produktu zawsze w cudzysłowie (bywają w niej przecinki), pozostałe
+    # pola (liczby, daty, "allegro") nigdy - stąd zapis ręczny zamiast csv.writer.
+    fields = ["nr", "data", "produkt", "liczba", "cena", "cena jednostkowa", "sklep"]
     with open(OUTPUT_DIR / "zakupy.csv", "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=["nr", "data", "produkt", "liczba", "cena",
-                                          "cena jednostkowa", "sklep"])
-        w.writeheader()
-        w.writerows(out)
+        f.write(",".join(fields) + "\n")
+        for row in out:
+            f.write(",".join(_quote(row[k]) if k == "produkt" else str(row[k])
+                             for k in fields) + "\n")
+
+
+def normalize_name(name: str) -> str:
+    """Małe litery i pojedyncze spacje, np. 'ŚWIECA  Zapłonowa ' -> 'świeca zapłonowa'."""
+    return " ".join(str(name or "").split()).lower()
+
+
+def _quote(value: str) -> str:
+    return '"' + str(value).replace('"', '""') + '"'
 
 
 def rebuild_outputs() -> list[dict]:
-    OUTPUT_DIR.mkdir(exist_ok=True)
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     # łączymy z poprzednimi pobraniami (Allegro pokazuje tylko ostatnie zakupy
     # bez dodatkowego przewijania, a starsze zamówienia mogą kiedyś zniknąć)
     orders = load_saved_orders()
@@ -788,6 +802,40 @@ def rebuild_outputs() -> list[dict]:
     if not orders:
         print("Nie rozpoznano żadnych zamówień. Uruchom z --discover i sprawdź "
               f"{DISCOVERY_DIR}/network_log.json (Allegro mogło zmienić format).")
+
+
+# --------------------------------------------------------------------------- #
+# Historia zmian danych: lokalne repozytorium git w ./dane
+# --------------------------------------------------------------------------- #
+PROJECT_ROOT = BASE_DIR.parent.parent
+PRIVATE_GIT = PROJECT_ROOT / ".git-private"  # wspólne prywatne repo danych projektu
+
+
+def commit_data(message: str) -> None:
+    """Commituje zmiany w ./dane do prywatnego, lokalnego repo .git-private
+    w katalogu głównym projektu (bez remote - dane nie opuszczają komputera).
+    `add -f`, bo .gitignore repozytorium z kodem ignoruje ./dane."""
+    if not PRIVATE_GIT.exists():
+        return
+    git = ["git", f"--git-dir={PRIVATE_GIT}", f"--work-tree={PROJECT_ROOT}"]
+    path = str(DATA_DIR.relative_to(PROJECT_ROOT))
+    try:
+        subprocess.run(git + ["add", "-f", "-A", "--", path], check=True, cwd=PROJECT_ROOT)
+        status = subprocess.run(git + ["diff", "--cached", "--name-status", "--", path],
+                                check=True, capture_output=True, text=True,
+                                cwd=PROJECT_ROOT).stdout.splitlines()
+        if not status:
+            print("Dane bez zmian - nic do zapisania w historii.")
+            return
+        details = sum(1 for line in status if "allegro_raw/details/" in line)
+        if details:
+            message += f", zmienione szczegóły zwrotów: {details}"
+        # commit tylko danych Allegro (reszta danych projektu zostaje bez zmian)
+        subprocess.run(git + ["commit", "-q", "-m", f"allegro: {message}", "--", path],
+                       check=True, cwd=PROJECT_ROOT)
+        print(f"Zapisano w historii danych (.git-private): allegro: {message}")
+    except (OSError, subprocess.CalledProcessError) as e:
+        print(f"Nie udało się zapisać historii danych: {e}")
 
 
 # --------------------------------------------------------------------------- #
@@ -834,7 +882,7 @@ def main() -> None:
     parser.add_argument("--discover", action="store_true",
                         help="zapisz ruch sieciowy strony 'Kupione' do ./discovery")
     g.add_argument("--rebuild", action="store_true",
-                   help="tylko odtwórz orders.json / items.csv z ./allegro_raw (bez przeglądarki)")
+                   help="tylko odtwórz orders.json / items.csv z ./dane/allegro_raw (bez przeglądarki)")
     parser.add_argument("--days", type=int, default=30,
                         help="przeglądaj zakupy do N dni przed ostatnim zapisanym "
                              "(domyślnie 30), żeby złapać zwroty i zmiany statusów")
@@ -849,7 +897,8 @@ def main() -> None:
     if args.forget_credentials:
         return forget_credentials()
     if args.rebuild:
-        return rebuild_outputs()
+        rebuild_outputs()
+        return commit_data(f"przebudowa plików wynikowych {time.strftime('%Y-%m-%d %H:%M')}")
 
     creds = None if args.manual_login else LazyCredentials(ask=args.ask)
     proc = start_browser()
@@ -863,6 +912,7 @@ def main() -> None:
                 discover(context, page)
             else:
                 collector = Collector(keep_all=False)
+                known_before = {order_key(o) for o in load_saved_orders()}
                 cutoff = None if args.full else browse_cutoff(args.days)
                 print("Przeglądam " + (f"zakupy od {cutoff.date()}..." if cutoff
                                        else "całą listę zakupów..."))
@@ -874,7 +924,10 @@ def main() -> None:
                 browsed = {order_key(o) for o in extract_orders(collector.bodies)}
                 orders = load_saved_orders()
                 fetch_return_details(page, orders, refresh=browsed)
-                rebuild_outputs()
+                orders = rebuild_outputs()
+                new = len({order_key(o) for o in orders} - known_before)
+                commit_data(f"pobranie {time.strftime('%Y-%m-%d %H:%M')}: "
+                            f"zamówień {len(orders)}, nowych {new}")
     finally:
         proc.terminate()
 

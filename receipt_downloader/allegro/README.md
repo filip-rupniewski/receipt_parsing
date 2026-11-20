@@ -3,9 +3,10 @@
 Pobiera zakupy z [Moje Allegro → Kupione](https://allegro.pl/moje-allegro/zakupy/kupione).
 
 ```
-allegro.pl ──download_purchases.py──▶ allegro_raw/responses_<data>.json   (surowe odpowiedzi JSON)
-                                  └──▶ allegro_purchases/orders.json       (zamówienia)
-                                  └──▶ allegro_purchases/items.csv         (jedna pozycja = jeden wiersz)
+allegro.pl ──download_purchases.py──▶ dane/allegro_raw/responses_<data>.json  (surowe odpowiedzi JSON)
+                                  └──▶ dane/allegro_raw/details/*.json        (szczegóły zwrotów)
+                                  └──▶ dane/allegro_purchases/                (orders.json, items.csv,
+                                                                              items_kept.csv, zakupy.csv)
 ```
 
 ## Pierwsza konfiguracja
@@ -16,6 +17,23 @@ uv sync
 uv run playwright install chromium
 uv run download_purchases.py --save-credentials   # opcjonalnie, patrz niżej
 ```
+
+## Dane osobowe i ich historia
+
+Wszystkie pobrane dane są w `dane/`. Repozytorium z kodem ignoruje ten katalog
+(`.gitignore`), a historia danych jest zapisywana we wspólnym, prywatnym repozytorium
+projektu `.git-private` w katalogu głównym. To repozytorium nie ma remote, więc nic nie
+trafia na GitHub (opis w głównym README). Po każdym pobraniu i po `--rebuild`, jeśli
+coś się zmieniło, skrypt sam robi tam commit, np. „allegro: pobranie 2026-11-20 12:00:
+zamówień 128, nowych 1, zmienione szczegóły zwrotów: 2”. Historię oglądasz tak
+(z katalogu głównego projektu):
+
+```
+git --git-dir=.git-private log --stat -- receipt_downloader/allegro/dane
+git --git-dir=.git-private diff HEAD~1 -- receipt_downloader/allegro/dane/allegro_purchases/zakupy.csv
+```
+
+Jeśli `.git-private` nie istnieje, skrypt pomija commit.
 
 ## Dane logowania
 
@@ -43,18 +61,21 @@ mu działać z sandboxem.
 
 ## Wynik
 
-`allegro_purchases/items.csv`: jedna pozycja na wiersz, kolumny `order_id`, `date`,
+`dane/allegro_purchases/items.csv`: jedna pozycja na wiersz, kolumny `order_id`, `date`,
 `seller`, `order_status` (DELIVERED, RETURNED, PARTIALLY_RETURNED, ORDER_CANCELLED…),
 `order_total`, `offer_id`, `title`, `quantity`, `unit_price`, `currency`,
 `delivery_name`, `delivery_cost`, `url`. Pełne dane zamówień są w `orders.json`.
 
-`allegro_purchases/items_kept.csv` zawiera tylko to, co zostało u Ciebie. Pomija
+`dane/allegro_purchases/items_kept.csv` zawiera tylko to, co zostało u Ciebie. Pomija
 anulowane zamówienia i zwrócone sztuki, także zwroty jeszcze w trakcie weryfikacji.
 Pozycja zwrócona częściowo zostaje z pomniejszoną ilością. Kolumny: `order_id`, `date`,
 `seller`, `offer_id`, `title`, `quantity`, `unit_price`, `total` (= ilość × cena),
 `currency`, `url`. Koszt dostawy nie jest wliczony.
 
-`allegro_purchases/zakupy.csv` to uproszczona wersja `items_kept.csv` do czytania.
+`dane/allegro_purchases/zakupy.csv` to uproszczona wersja `items_kept.csv` do czytania.
+Nazwa produktu jest zapisana małymi literami, z pojedynczymi spacjami i zawsze
+w cudzysłowie, bo bywają w niej przecinki. Cudzysłów w nazwie, np. `1/2"`, jest
+zapisany zgodnie z CSV jako `""`.
 Ma kolumny `nr`, `data`, `produkt`, `liczba`, `cena` (= liczba × cena jednostkowa),
 `cena jednostkowa` i `sklep` (zawsze `allegro`). Kwoty są w PLN, a najnowszy zakup jest
 na górze. `nr` to numer zakupu: 1 to najstarszy, a numery
@@ -62,9 +83,9 @@ idą kolejno bez luk. Pozycje z jednego zamówienia mają ten sam numer. Numery 
 tylko z zachowanych zakupów, więc mogą się przesunąć, jeśli później zwrócisz całe
 zamówienie. Data jest w czasie polskim. Kwoty w innych walutach są przeliczane na PLN
 po średnim kursie NBP z dnia roboczego przed zakupem. Kursy są zapisywane w
-`allegro_raw/nbp_rates.json`.
+`dane/allegro_raw/nbp_rates.json`.
 
-`uv run download_purchases.py --rebuild` odtwarza pliki wynikowe z `allegro_raw/` bez
+`uv run download_purchases.py --rebuild` odtwarza pliki wynikowe z `dane/allegro_raw/` bez
 logowania, np. po zmianie kolumn.
 
 ## Jak działa pobieranie
@@ -73,9 +94,9 @@ Wewnętrzne API strony „Kupione” nie jest publiczne. Dlatego skrypt nie woł
 bezpośrednio, tylko przewija stronę i klika „pokaż więcej” / „następna”. W tym czasie
 zapisuje odpowiedzi JSON, które wyglądają na listę zamówień (obiekty z listą
 `offers`/`lineItems`/`items` i polami takimi jak `seller` czy `orderDate`). Wyniki są
-łączone ze wszystkimi wcześniejszymi pobraniami z `allegro_raw/`.
+łączone ze wszystkimi wcześniejszymi pobraniami z `dane/allegro_raw/`.
 
-Pierwsze uruchomienie przegląda całą listę. Znacznik `allegro_raw/.history_complete`
+Pierwsze uruchomienie przegląda całą listę. Znacznik `dane/allegro_raw/.history_complete`
 zapisuje, że historia jest kompletna. Kolejne uruchomienia przeglądają listę tylko do
 30 dni przed najnowszym zapisanym zakupem (`--days N` zmienia ten okres). Dzięki temu
 łapią nowe zakupy oraz zwroty i zmiany statusów w ostatnich zamówieniach. `--full`
@@ -90,7 +111,7 @@ z osadzonego w niej JSON-a:
 - zgłoszone zwroty (`rescissions`): produkt, ilość, powód, etap,
 - zwroty pieniędzy (`refunds`): produkt, zwrócona ilość i kwota, status.
 
-Wynik trafia do `allegro_raw/details/<id_zamówienia>.json`. Szczegóły są pobierane dla
+Wynik trafia do `dane/allegro_raw/details/<id_zamówienia>.json`. Szczegóły są pobierane dla
 nowych zamówień ze zwrotem i dla tych z przeglądanego okresu, bo zwrot mógł się w tym
 czasie zmienić. W `items.csv` są kolumny `returned_quantity`, `return_reason`,
 `return_status` (np. „Decyzja o zwrocie: Pełen zwrot pieniędzy.”), `return_date`,

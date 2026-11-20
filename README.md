@@ -157,3 +157,25 @@ The script will:
 - [ ] Expand support for additional supermarket receipt formats (e.g., Coop, Migros).
 - [ ] correct detection of: Cashew Peanut Mix Hot-Ch    0,2    2,79    13,95    lidl
 - [ ] correct weight. Now it is in grams
+
+## Dane osobowe: prywatne repozytorium `.git-private`
+
+Zdjęcia paragonów, pobrane zakupy i wyniki są w `.gitignore`, więc nie trafiają na
+GitHub. Ich historia jest zapisywana w osobnym, lokalnym repozytorium `.git-private`
+w katalogu głównym projektu. To repozytorium nie ma remote. Śledzi tylko katalogi
+z danymi wymienione w `zapisz_dane_prywatne.sh`: `paragony/`, `paragony stare/`,
+`archives/`, `denner/`, `lidl/`, `lidl_wyrazne/`, `migros/`, `output_data/`, pobrane
+paragony Biedronki i `receipt_downloader/allegro/dane/`. Nigdy nie zapisuje haseł
+(`credentials.json`), sesji przeglądarek ani cache.
+
+```
+./zapisz_dane_prywatne.sh "opis zmian"   # zapisz bieżący stan danych
+git --git-dir=.git-private log --stat     # historia
+git --git-dir=.git-private status         # zmiany w już śledzonych plikach
+```
+
+Skrypt Allegro sam robi commit swoich danych po każdym pobraniu. Pozostałe dane zapisujesz
+skryptem powyżej. Nowy katalog z danymi trzeba dopisać do listy `DANE` w skrypcie.
+Repozytorium jest na tym samym dysku, więc to historia, a nie kopia zapasowa. Kopię
+zrobisz np. przez `git clone --bare .git-private /inny/dysk/receipt_dane.git`.
+

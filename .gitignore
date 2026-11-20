@@ -59,3 +59,7 @@ test_image_processing_migros/
 credentials.json
 **/credentials.json
 .browser_profile/
+
+# Prywatne, lokalne repo z danymi osobowymi (bez remote) i zdjęcia paragonów
+/.git-private/
+/paragony/
