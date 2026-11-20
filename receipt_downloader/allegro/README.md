@@ -6,7 +6,8 @@ Pobiera zakupy z [Moje Allegro → Kupione](https://allegro.pl/moje-allegro/zaku
 allegro.pl ──download_purchases.py──▶ dane/allegro_raw/responses_<data>.json  (surowe odpowiedzi JSON)
                                   └──▶ dane/allegro_raw/details/*.json        (szczegóły zwrotów)
                                   └──▶ dane/allegro_purchases/                (orders.json, items.csv,
-                                                                              items_kept.csv, zakupy.csv)
+                                                                              items_kept.csv, zakupy.csv,
+                                                                              wydatki_miesiecznie.png)
 ```
 
 ## Pierwsza konfiguracja
@@ -84,6 +85,17 @@ tylko z zachowanych zakupów, więc mogą się przesunąć, jeśli później zwr
 zamówienie. Data jest w czasie polskim. Kwoty w innych walutach są przeliczane na PLN
 po średnim kursie NBP z dnia roboczego przed zakupem. Kursy są zapisywane w
 `dane/allegro_raw/nbp_rates.json`.
+
+`dane/allegro_purchases/wydatki_miesiecznie.png` to wykres kolumnowy wydatków
+w kolejnych miesiącach, policzony z `zakupy.csv` (z uwzględnieniem zwrotów, bez anulowanych zamówień
+i dostawy). Miesiące bez zakupów mają 0 zł. W kolumnach, które mają co najmniej 10%
+wysokości najwyższej, trzy najdroższe pozycje (liczba × cena jednostkowa) są zaznaczone
+odcieniami niebieskiego, od najciemniejszego dla najdroższej. Reszta zakupów z miesiąca
+jest szara. Pod wykresem jest lista pogrupowana po miesiącach. Zawiera
+wyróżnione pozycje oraz, w każdym miesiącu, wszystkie pozostałe pozycje droższe niż
+100 zł, oznaczone szarym kwadratem. Progi ustawiają `TOP_N`, `TOP_MIN_SHARE`
+i `LIST_MIN_PRICE` w skrypcie. Wykres odświeża się
+przy każdym pobraniu.
 
 `uv run download_purchases.py --rebuild` odtwarza pliki wynikowe z `dane/allegro_raw/` bez
 logowania, np. po zmianie kolumn.
