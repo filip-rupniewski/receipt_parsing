@@ -43,6 +43,7 @@ import urllib.request
 from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import urlparse
+from zoneinfo import ZoneInfo
 
 from playwright.sync_api import BrowserContext, Page, Response, sync_playwright
 
@@ -696,6 +697,59 @@ def kept_items(rows: list[dict]) -> list[dict]:
     return out
 
 
+NBP_CACHE = RAW_DIR / "nbp_rates.json"
+
+
+def pln_rate(currency: str, day: datetime, cache: dict) -> float | None:
+    """Średni kurs NBP (tabela A) z ostatniego dnia roboczego przed `day`."""
+    if not currency or currency == "PLN":
+        return 1.0
+    key = f"{currency}:{day.date()}"
+    if key not in cache:
+        start = (day - timedelta(days=10)).date()
+        end = (day - timedelta(days=1)).date()
+        url = (f"https://api.nbp.pl/api/exchangerates/rates/a/{currency.lower()}/"
+               f"{start}/{end}/?format=json")
+        try:
+            with urllib.request.urlopen(url, timeout=10) as r:
+                cache[key] = json.load(r)["rates"][-1]["mid"]
+        except Exception as e:
+            print(f"  brak kursu {currency} z {day.date()} ({e}) - pomijam kwotę")
+            return None
+    return cache[key]
+
+
+def write_simple_csv(kept: list[dict]) -> None:
+    """zakupy.csv - wersja do czytania: numer zakupu (1 = najstarszy), data,
+    produkt, ilość, ceny w PLN. Bez anulowanych i zwróconych pozycji."""
+    cache = json.loads(NBP_CACHE.read_text()) if NBP_CACHE.exists() else {}
+    n_cache = len(cache)
+    rows = sorted(kept, key=lambda r: (str(r["date"]), r["order_id"]))
+    numbers: dict[str, int] = {}
+    out = []
+    for r in rows:
+        nr = numbers.setdefault(r["order_id"], len(numbers) + 1)
+        day = _parse_date(r["date"])
+        local = day.astimezone(ZoneInfo("Europe/Warsaw")) if day else None
+        rate = pln_rate(r["currency"], day, cache) if day else None
+        unit = float(r["unit_price"] or 0) * rate if rate else None
+        out.append({
+            "nr": nr,
+            "data": local.date().isoformat() if local else "",
+            "produkt": r["title"],
+            "ilość": r["quantity"],
+            "cena_pln": f"{unit:.2f}" if unit is not None else "",
+            "razem_pln": f"{unit * int(r['quantity']):.2f}" if unit is not None else "",
+        })
+    if len(cache) != n_cache:
+        NBP_CACHE.write_text(json.dumps(cache, indent=1))
+    with open(OUTPUT_DIR / "zakupy.csv", "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=["nr", "data", "produkt", "ilość",
+                                          "cena_pln", "razem_pln"])
+        w.writeheader()
+        w.writerows(out)
+
+
 def rebuild_outputs() -> list[dict]:
     OUTPUT_DIR.mkdir(exist_ok=True)
     # łączymy z poprzednimi pobraniami (Allegro pokazuje tylko ostatnie zakupy
@@ -723,6 +777,7 @@ def rebuild_outputs() -> list[dict]:
         w = csv.DictWriter(f, fieldnames=KEPT_FIELDS)
         w.writeheader()
         w.writerows(kept)
+    write_simple_csv(kept)
     n_ret = sum(1 for r in rows if r.get("returned_quantity") or r.get("refunded_quantity"))
     print(f"Zamówień: {len(orders)}, pozycji: {len(rows)} (zwróconych: {n_ret}), "
           f"zatrzymanych pozycji: {len(kept)} -> {OUTPUT_DIR}/")

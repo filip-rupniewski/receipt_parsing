@@ -54,6 +54,15 @@ Pozycja zwrócona częściowo zostaje z pomniejszoną ilością. Kolumny: `order
 `seller`, `offer_id`, `title`, `quantity`, `unit_price`, `total` (= ilość × cena),
 `currency`, `url`. Koszt dostawy nie jest wliczony.
 
+`allegro_purchases/zakupy.csv` to uproszczona wersja `items_kept.csv` do czytania.
+Ma kolumny `nr`, `data`, `produkt`, `ilość`, `cena_pln`, `razem_pln`, a wiersze są
+posortowane od najstarszego zakupu. `nr` to numer zakupu: 1 to najstarszy, a numery
+idą kolejno bez luk. Pozycje z jednego zamówienia mają ten sam numer. Numery są liczone
+tylko z zachowanych zakupów, więc mogą się przesunąć, jeśli później zwrócisz całe
+zamówienie. Data jest w czasie polskim. Kwoty w innych walutach są przeliczane na PLN
+po średnim kursie NBP z dnia roboczego przed zakupem. Kursy są zapisywane w
+`allegro_raw/nbp_rates.json`.
+
 `uv run download_purchases.py --rebuild` odtwarza pliki wynikowe z `allegro_raw/` bez
 logowania, np. po zmianie kolumn.
 
